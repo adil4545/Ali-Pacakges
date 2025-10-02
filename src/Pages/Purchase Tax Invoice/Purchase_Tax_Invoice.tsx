@@ -1,0 +1,427 @@
+import { useState } from "react";
+import type { products } from "../../Types/Products";
+import type { Party } from "../../Types/Party";
+import type { Invoice } from "../../Types/Invoice";
+import Button from "../../Components/UI/Button";
+
+export default function Purchase_Tax_Invoice() {
+  const parties: Party[] = [
+    {
+      id: 1,
+      partyName: "ABC Traders",
+      address: "Lahore",
+      ntn: "1234567",
+      province: "Punjab",
+    },
+    {
+      id: 2,
+      partyName: "XYZ Enterprises",
+      address: "Karachi",
+      ntn: "9876543",
+      province: "Sindh",
+    },
+  ];
+
+  const products: products[] = [
+    { id: 1, productName: "Product A", units: "Box" },
+    { id: 2, productName: "Product B", units: "Kg" },
+  ];
+
+  const [formData, setFormData] = useState<Invoice>({
+    date: "",
+    voucherNo: "",
+    remarks: "",
+    pOrder: "",
+    invoiceNo: "",
+    address: "",
+    ntn: "",
+    province: "",
+    quantity: 0,
+    valueExTax: 0,
+    price: 0,
+    stPercent: 0,
+    valueIncTax: 0,
+    taxValue: 0,
+    hscode: 0,
+    productId: 0,
+    units: "",
+    party: undefined,
+    products: undefined,
+  });
+
+  const [productRows, setProductRows] = useState<Invoice[]>([]);
+
+  // Totals
+  const totalQuantity = productRows.reduce(
+    (acc, row) => acc + (row.quantity || 0),
+    0
+  );
+  const totalTax = productRows.reduce(
+    (acc, row) => acc + (row.taxValue || 0),
+    0
+  );
+  const totalExTax = productRows.reduce(
+    (acc, row) => acc + (row.valueExTax || 0),
+    0
+  );
+  const totalIncTax = productRows.reduce(
+    (acc, row) => acc + (row.valueIncTax || 0),
+    0
+  );
+
+  // Party change handler
+  const handlePartyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const partyId = Number(e.target.value);
+    const selected = parties.find((p) => p.id === partyId);
+    if (!selected) return;
+    setFormData({
+      ...formData,
+      party: selected,
+      address: selected.address,
+      ntn: selected.ntn,
+      province: selected.province,
+    });
+  };
+
+  // Add new product row
+  const addProductRow = () => {
+    setProductRows([
+      ...productRows,
+      {
+        hscode: 0,
+        productId: 0,
+        units: "",
+        quantity: 0,
+        price: 0,
+        stPercent: 0,
+        taxValue: 0,
+        valueExTax: 0,
+        valueIncTax: 0,
+        party: formData.party,
+        products: undefined,
+        date: "",
+        voucherNo: "",
+        remarks: "",
+        pOrder: "",
+        invoiceNo: "",
+        address: "",
+        ntn: "",
+        province: "",
+      },
+    ]);
+  };
+
+  // Update product row
+  const updateProductRow = <K extends keyof Invoice>(
+    index: number,
+    field: K,
+    value: Invoice[K]
+  ) => {
+    const updated = [...productRows];
+    updated[index] = { ...updated[index], [field]: value };
+
+    // Auto calculations
+    const qty = updated[index].quantity || 0;
+    const price = updated[index].price || 0;
+    const stPercent = updated[index].stPercent || 0;
+
+    updated[index].valueExTax = qty * price;
+    updated[index].taxValue = (updated[index].valueExTax * stPercent) / 100;
+    updated[index].valueIncTax =
+      updated[index].valueExTax + updated[index].taxValue;
+
+    setProductRows(updated);
+  };
+
+  const removeProductRow = (index: number) => {
+    setProductRows(productRows.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Invoice Saved:", { formData, productRows });
+    alert("Purchase Tax Invoice Saved!");
+  };
+
+  return (
+    <div className="bg-gray-50 min-h-screen p-6">
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Invoice Info */}
+        <div className="bg-white p-6 shadow rounded-lg">
+          <h2 className="text-2xl font-extrabold bg-gradient-to-r from-amber-600 to-amber-900 bg-clip-text text-transparent mb-4">
+            Purchase Tax Invoice
+          </h2>
+          <div className="grid grid-cols-3 gap-6">
+            {["date", "voucherNo", "remarks", "pOrder", "invoiceNo"].map(
+              (field) => (
+                <div key={field}>
+                  <label className="block font-medium mb-1">
+                    <span className="text-red-600">*</span> {field}
+                  </label>
+                  <input
+                    type={field === "date" ? "date" : "text"}
+                    value={String(formData[field as keyof Invoice] ?? "")}
+                    onChange={(e) =>
+                      setFormData({ ...formData, [field]: e.target.value })
+                    }
+                    className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-amber-600 outline-none"
+                    required
+                  />
+                </div>
+              )
+            )}
+
+            {/* Party Select */}
+            <div>
+              <label className="block font-medium mb-1">
+                <span className="text-red-600">*</span> Select Party
+              </label>
+              <select
+                onChange={handlePartyChange}
+                className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-amber-600 outline-none"
+                required
+              >
+                <option value="">Select Party</option>
+                {parties.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.partyName}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Auto-filled fields */}
+            {["address", "ntn", "province"].map((field) => (
+              <div key={field}>
+                <label className="block font-medium mb-1">{field}</label>
+                <input
+                  type="text"
+                  value={String(formData[field as keyof Invoice] ?? "")}
+                  readOnly
+                  className="w-full border rounded px-3 py-2 bg-gray-100"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Product Details */}
+        <div className="bg-white p-6 shadow rounded-lg">
+          <h2 className="text-2xl font-extrabold bg-gradient-to-r from-amber-600 to-amber-900 bg-clip-text text-transparent mb-4">
+            Product Details
+          </h2>
+          {productRows.length === 0 ? (
+            <button
+              type="button"
+              onClick={addProductRow}
+              className="w-full py-2 bg-gradient-to-r from-amber-600 to-amber-900 text-white hover:opacity-90 transition font-semibold rounded"
+            >
+              + Add Product
+            </button>
+          ) : (
+            <div className="space-y-4">
+              {productRows.map((row, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-12 gap-2 items-start"
+                >
+                  {/* HS Code */}
+                  <div className="flex flex-col col-span-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      HS Code
+                    </label>
+                    <input
+                      type="number"
+                      value={row.hscode ?? ""}
+                      onChange={(e) =>
+                        updateProductRow(
+                          index,
+                          "hscode",
+                          Number(e.target.value)
+                        )
+                      }
+                      className="border rounded px-2 py-1"
+                    />
+                  </div>
+
+                  {/* Product */}
+                  <div className="flex flex-col col-span-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Product
+                    </label>
+                    <select
+                      value={row.products?.id ?? 0}
+                      onChange={(e) => {
+                        const prod = products.find(
+                          (p) => p.id === Number(e.target.value)
+                        );
+                        updateProductRow(index, "products", prod as products);
+                        updateProductRow(index, "units", prod?.units ?? "");
+                      }}
+                      className="border rounded px-2 py-1"
+                    >
+                      <option value={0}>Select</option>
+                      {products.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.productName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Units */}
+                  <div className="flex flex-col col-span-1">
+                    <label className="text-sm font-medium text-gray-700">
+                      Units
+                    </label>
+                    <input
+                      type="text"
+                      value={row.units ?? ""}
+                      readOnly
+                      className="border rounded px-2 py-1 bg-gray-100"
+                    />
+                  </div>
+
+                  {/* Qty */}
+                  <div className="flex flex-col col-span-1">
+                    <label className="text-sm font-medium text-gray-700">
+                      Qty
+                    </label>
+                    <input
+                      type="number"
+                      value={row.quantity ?? ""}
+                      onChange={(e) =>
+                        updateProductRow(
+                          index,
+                          "quantity",
+                          Number(e.target.value)
+                        )
+                      }
+                      className="border rounded px-2 py-1"
+                    />
+                  </div>
+
+                  {/* Price */}
+                  <div className="flex flex-col col-span-1">
+                    <label className="text-sm font-medium text-gray-700">
+                      Price
+                    </label>
+                    <input
+                      type="number"
+                      value={row.price ?? ""}
+                      onChange={(e) =>
+                        updateProductRow(index, "price", Number(e.target.value))
+                      }
+                      className="border rounded px-2 py-1"
+                    />
+                  </div>
+
+                  {/* S.T% */}
+                  <div className="flex flex-col col-span-1">
+                    <label className="text-sm font-medium text-gray-700">
+                      S.T%
+                    </label>
+                    <input
+                      type="number"
+                      value={row.stPercent ?? ""}
+                      onChange={(e) =>
+                        updateProductRow(
+                          index,
+                          "stPercent",
+                          Number(e.target.value)
+                        )
+                      }
+                      className="border rounded px-2 py-1"
+                    />
+                  </div>
+
+                  {/* Tax, Ex-Tax, Inc-Tax */}
+                  {/* Tax, Ex-Tax, Inc-Tax */}
+                  <div className="flex flex-col col-span-3 space-y-1">
+                    <div className="flex flex-col">
+                      <label className="text-sm font-medium text-gray-700">
+                        Tax
+                      </label>
+                      <input
+                        type="number"
+                        value={row.taxValue ?? 0}
+                        readOnly
+                        className="border rounded px-2 py-1 bg-gray-100"
+                      />
+                    </div>
+
+                    <div className="flex flex-col">
+                      <label className="text-sm font-medium text-gray-700">
+                        Ex-Tax
+                      </label>
+                      <input
+                        type="number"
+                        value={row.valueExTax ?? 0}
+                        readOnly
+                        className="border rounded px-2 py-1 bg-gray-100"
+                      />
+                    </div>
+
+                    <div className="flex flex-col">
+                      <label className="text-sm font-medium text-gray-700">
+                        Inc-Tax
+                      </label>
+                      <input
+                        type="number"
+                        value={row.valueIncTax ?? 0}
+                        readOnly
+                        className="border rounded px-2 py-1 bg-gray-100"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Delete */}
+                  <div className="flex flex-col justify-end col-span-1">
+                    <button
+                      type="button"
+                      onClick={() => removeProductRow(index)}
+                      className="bg-red-500 text-white font-bold px-2 py-1 rounded hover:bg-red-600"
+                    >
+                      DLT
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              <Button onClick={addProductRow}>+ Add Product</Button>
+            </div>
+          )}
+        </div>
+
+        {/* Totals */}
+        <div className="bg-white p-6 shadow rounded-lg">
+          <h2 className="text-2xl font-extrabold bg-gradient-to-r from-amber-600 to-amber-900 bg-clip-text text-transparent mb-4">
+            Totals
+          </h2>
+          <div className="grid grid-cols-4 gap-6">
+            {[
+              { label: "Total Quantity", value: totalQuantity },
+              { label: "Total Tax", value: totalTax },
+              { label: "Value Ex-Tax", value: totalExTax },
+              { label: "Value Inc-Tax", value: totalIncTax },
+            ].map((total, idx) => (
+              <div key={idx}>
+                <label>{total.label}</label>
+                <input
+                  type="number"
+                  value={total.value}
+                  readOnly
+                  className="w-full border rounded px-3 py-2 bg-gray-100"
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-end mt-6">
+            <Button>Submit Invoice</Button>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+}
