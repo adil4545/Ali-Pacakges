@@ -5,7 +5,8 @@ export const api = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: import.meta.env.VITE_APP_API_BASE_URL,
     prepareHeaders: (headers) => {
-      const token = "089c598f-21f5-39ee-bbba-80b1f7532214";
+      const token = import.meta.env.VITE_FBR_TOKEN;
+      localStorage.setItem("fbr_token", token);
       if (token) {
         headers.set("authorization", `Bearer ${token}`);
       }
