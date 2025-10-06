@@ -6,13 +6,13 @@ export interface UserProfile {
   firstName: string;
   lastName: string;
   email: string;
-  phone: string;
-  role: string;
-  status: string;
+  phone?: string | number | undefined;
+  role?: string;
+  status?: string;
   gender: "Male" | "Female" | "Transgender";
   businessName: string;
-  ntn: string;
+  ntn?: string;
   province?: Province;
-  address: string;
-  profilePic: string;
+  address?: string;
+  profilePic?: string;
 }

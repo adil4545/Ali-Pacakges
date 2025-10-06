@@ -2,19 +2,19 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
-import type { SuperAdmin } from "../../../Types/SuperAdmin";
+import type { UserProfile } from "../../../Types/Profile";
 import Button from "../../UI/Button";
 
 export default function AddAdmin() {
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState<SuperAdmin>({
-    FirstName: "",
-    LastName: "",
-    Email: "",
-    PhoneNumber: 0,
-    Gender: "Male",
-    CompanyName: "",
+  const [formData, setFormData] = useState<UserProfile>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: " ",
+    gender: "Male",
+    businessName: "",
   });
 
   const handleChange = (
@@ -52,7 +52,7 @@ export default function AddAdmin() {
               <input
                 type="text"
                 name="FirstName"
-                value={formData.FirstName}
+                value={formData.firstName}
                 onChange={handleChange}
                 className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-700"
                 placeholder="Enter First Name"
@@ -68,7 +68,7 @@ export default function AddAdmin() {
               <input
                 type="text"
                 name="LastName"
-                value={formData.LastName}
+                value={formData.lastName}
                 onChange={handleChange}
                 className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-700"
                 placeholder="Enter Last Name"
@@ -84,7 +84,7 @@ export default function AddAdmin() {
               <input
                 type="email"
                 name="Email"
-                value={formData.Email}
+                value={formData.email}
                 onChange={handleChange}
                 className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-700"
                 placeholder="Enter Email"
@@ -99,9 +99,9 @@ export default function AddAdmin() {
               </label>
               <PhoneInput
                 country={"pk"} // Default Pakistan
-                value={formData.PhoneNumber.toString()}
+                value={formData.phone?.toString() ?? ""}
                 onChange={(phone) =>
-                  setFormData({ ...formData, PhoneNumber: Number(phone) })
+                  setFormData({ ...formData, phone: Number(phone) })
                 }
                 inputClass="!w-full !h-10"
                 inputStyle={{ width: "100%" }}
@@ -116,7 +116,7 @@ export default function AddAdmin() {
               </label>
               <select
                 name="Gender"
-                value={formData.Gender}
+                value={formData.gender}
                 onChange={handleChange}
                 className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-700"
                 required
@@ -135,7 +135,7 @@ export default function AddAdmin() {
               <input
                 type="text"
                 name="CompanyName"
-                value={formData.CompanyName}
+                value={formData.businessName}
                 onChange={handleChange}
                 className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-700"
                 placeholder="Enter Company Name"

@@ -66,7 +66,7 @@ export default function Profile() {
           <div className="mt-6">
             <Button
               onClick={() => fileInputRef.current?.click()}
-              className="mt-16 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-900 text-white rounded-lg shadow hover:opacity-90 transition"
+              className="mt-2 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-900 text-white rounded-lg shadow hover:opacity-90 transition"
             >
               <FaUpload /> Update Profile Picture
             </Button>
@@ -132,8 +132,8 @@ export default function Profile() {
               </label>
               <PhoneInput
                 country={"pk"}
-                value={formData.phone}
-                onChange={(phone: string) =>
+                value={formData.phone?.toString()}
+                onChange={(phone: string | number) =>
                   setFormData({ ...formData, phone })
                 }
                 inputClass="!w-full !h-10 !text-base !pl-12 border rounded focus:ring-2 focus:ring-amber-600 outline-none"
@@ -280,7 +280,7 @@ export default function Profile() {
               type="submit"
               className="px-6 py-2 rounded-lg bg-gradient-to-r from-amber-600 to-amber-900 text-white shadow hover:opacity-90"
             >
-              Save Changes
+              Update Profile
             </button>
           </div>
         </form>

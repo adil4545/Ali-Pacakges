@@ -1,5 +1,4 @@
-import React from "react";
-import type { ReactNode, MouseEventHandler } from "react";
+import { forwardRef, type ReactNode, type MouseEventHandler } from "react";
 
 interface ButtonProps {
   children: ReactNode;
@@ -8,20 +7,23 @@ interface ButtonProps {
   className?: string;
 }
 
-const Button: React.FC<ButtonProps> = ({
-  children,
-  onClick,
-  className = "",
-}) => {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-8 py-2 rounded-md font-medium 
-     bg-gradient-to-r from-amber-600 to-amber-900 text-white hover:opacity-90 transition${className}`}
-    >
-      {children}
-    </button>
-  );
-};
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ children, onClick, disabled, className = "" }, ref) => {
+    return (
+      <button
+        ref={ref}
+        onClick={onClick}
+        disabled={disabled}
+        className={`px-8 py-2 rounded-md font-medium 
+          bg-gradient-to-r from-amber-600 to-amber-900 text-white 
+          hover:opacity-90 transition ${className}`}
+      >
+        {children}
+      </button>
+    );
+  }
+);
+
+Button.displayName = "Button"; // ⚡ recommended for forwardRef components
 
 export default Button;
