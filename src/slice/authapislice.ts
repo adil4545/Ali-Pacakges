@@ -18,6 +18,7 @@ export const api = createApi({
       return headers;
     },
   }),
-  tagTypes: ["Admins"],
+  tagTypes: ["Admins", "UserProfile"],
+
   endpoints: () => ({}),
 });

@@ -19,33 +19,54 @@ import {
 } from "react-icons/fa";
 import { HiDocumentReport } from "react-icons/hi";
 import { BsFillFileEarmarkBarGraphFill } from "react-icons/bs";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Avatar } from "antd";
 import ChangePasswordModal from "../../Models/ChangePassword";
 import FbrTokenModal from "../../Models/FBR_Token";
+import { useGetMyProfileQuery } from "../../api/Profile";
 
-function Navbar({
-  userName = "John Doe",
-  profilePic,
-}: {
-  userName?: string;
-  profilePic?: string;
-}) {
+function Navbar() {
   const [openMenu1, setOpenMenu1] = useState(false);
   const [openMenu2, setOpenMenu2] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [mobileOpenMenu1, setMobileOpenMenu1] = useState(false);
-  const [mobileOpenMenu2, setMobileOpenMenu2] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showTokenModal, setShowTokenModal] = useState(false);
+  const [userName, setUserName] = useState("User");
+  const [profilePic, setProfilePic] = useState("");
 
   const menu1Ref = useRef<HTMLDivElement | null>(null);
   const menu2Ref = useRef<HTMLDivElement | null>(null);
   const profileRef = useRef<HTMLDivElement | null>(null);
 
+  const { data: userData } = useGetMyProfileQuery();
   const location = useLocation();
+  const navigate = useNavigate();
 
+  // ✅ Capitalize first letter helper
+  const capitalize = (str?: string) =>
+    str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "";
+
+  // ✅ Fetch user profile
+  useEffect(() => {
+    if (userData?.data) {
+      const { first_name, last_name, profile_image } = userData.data;
+
+      const fullName = `${capitalize(first_name)} ${capitalize(
+        last_name
+      )}`.trim();
+      setUserName(fullName || "User");
+
+      const imageUrl = profile_image
+        ? profile_image.startsWith("http")
+          ? profile_image
+          : `${import.meta.env.VITE_API_URL || ""}${profile_image}`
+        : "";
+      setProfilePic(imageUrl);
+    }
+  }, [userData]);
+
+  // ✅ Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
@@ -60,6 +81,7 @@ function Navbar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // ✅ Current page name
   const currentPageRaw =
     location.pathname.split("/").filter(Boolean).pop() || "Dashboard";
   const currentPage = currentPageRaw
@@ -68,14 +90,15 @@ function Navbar({
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
     .join(" ");
 
-  const handleMobileNavClick = () => {
-    setMobileMenuOpen(false);
-    setMobileOpenMenu1(false);
-    setMobileOpenMenu2(false);
+  // ✅ Logout handler
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/");
   };
 
   return (
     <div className="w-full bg-gradient-to-r from-amber-600 to-amber-900 text-white shadow-lg">
+      {/* Top Navbar */}
       <nav className="w-full h-[10vh] flex flex-wrap items-center justify-between px-6">
         <div className="flex items-center gap-4">
           <Link to="dashboard" className="flex items-center gap-2">
@@ -88,6 +111,7 @@ function Navbar({
           </Link>
         </div>
 
+        {/* Desktop Menu */}
         <ul className="hidden lg:flex items-center gap-8 text-lg font-medium">
           <li>
             <Link
@@ -115,6 +139,7 @@ function Navbar({
           </li>
         </ul>
 
+        {/* Right Section */}
         <div className="flex items-center gap-4 ml-auto flex-shrink-0">
           <button
             className="lg:hidden text-2xl"
@@ -124,6 +149,7 @@ function Navbar({
           </button>
 
           <div className="hidden lg:flex items-center gap-3">
+            {/* Tax Reports */}
             <div className="relative" ref={menu1Ref}>
               <button
                 onClick={() => setOpenMenu1(!openMenu1)}
@@ -165,6 +191,7 @@ function Navbar({
               )}
             </div>
 
+            {/* Reports */}
             <div className="relative" ref={menu2Ref}>
               <button
                 onClick={() => setOpenMenu2(!openMenu2)}
@@ -214,6 +241,7 @@ function Navbar({
               )}
             </div>
 
+            {/* Profile */}
             <div className="relative flex-shrink-0" ref={profileRef}>
               <div
                 onClick={() => setOpenProfile(!openProfile)}
@@ -228,6 +256,7 @@ function Navbar({
                 />
                 <span className="font-medium">{userName}</span>
               </div>
+
               {openProfile && (
                 <div className="absolute right-0 mt-2 bg-white text-black rounded-md shadow-lg min-w-[176px] z-50 overflow-hidden">
                   <Link
@@ -256,13 +285,12 @@ function Navbar({
                   >
                     <FaLock /> Change Password
                   </button>
-                  <Link
-                    to="/"
-                    onClick={() => setOpenProfile(false)}
+                  <button
+                    onClick={handleLogout}
                     className="w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2 text-red-500 font-semibold"
                   >
                     <FaSignOutAlt /> Logout
-                  </Link>
+                  </button>
                 </div>
               )}
             </div>
@@ -270,149 +298,13 @@ function Navbar({
         </div>
       </nav>
 
-      {mobileMenuOpen && (
-        <div className="lg:hidden bg-amber-700 text-white px-6 py-4 space-y-3">
-          <Link
-            to="dashboard"
-            onClick={handleMobileNavClick}
-            className="flex items-center gap-2 hover:underline"
-          >
-            <MdDashboard /> Dashboard
-          </Link>
-          <Link
-            to="products"
-            onClick={handleMobileNavClick}
-            className="flex items-center gap-2 hover:underline"
-          >
-            <FaBoxOpen /> Products
-          </Link>
-          <Link
-            to="parties"
-            onClick={handleMobileNavClick}
-            className="flex items-center gap-2 hover:underline"
-          >
-            <FaUsers /> Parties
-          </Link>
-
-          <div className="space-y-1">
-            <button
-              className="flex items-center gap-2 w-full"
-              onClick={() => setMobileOpenMenu1(!mobileOpenMenu1)}
-            >
-              <BsFillFileEarmarkBarGraphFill /> Tax Reports ▾
-            </button>
-            {mobileOpenMenu1 && (
-              <div className="pl-4 space-y-1">
-                <Link
-                  to="purchase-tax-list"
-                  onClick={handleMobileNavClick}
-                  className="block py-1 hover:underline"
-                >
-                  <FaListAlt /> Purchase Tax List
-                </Link>
-                <Link
-                  to="sales-tax-list"
-                  onClick={handleMobileNavClick}
-                  className="block py-1 hover:underline"
-                >
-                  <FaListOl /> Sale Tax List
-                </Link>
-                <Link
-                  to="credit-note-list"
-                  onClick={handleMobileNavClick}
-                  className="block py-1 hover:underline"
-                >
-                  <FaRegCreditCard /> Credit Note List
-                </Link>
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-1">
-            <button
-              className="flex items-center gap-2 w-full"
-              onClick={() => setMobileOpenMenu2(!mobileOpenMenu2)}
-            >
-              <HiDocumentReport /> Reports ▾
-            </button>
-            {mobileOpenMenu2 && (
-              <div className="pl-4 space-y-1">
-                <Link
-                  to="single-party"
-                  onClick={handleMobileNavClick}
-                  className="block py-1 hover:underline"
-                >
-                  <FaUser /> Single Party
-                </Link>
-                <Link
-                  to="all-party"
-                  onClick={handleMobileNavClick}
-                  className="block py-1 hover:underline"
-                >
-                  <FaUsers /> All Party
-                </Link>
-                <Link
-                  to="product-report"
-                  onClick={handleMobileNavClick}
-                  className="block py-1 hover:underline"
-                >
-                  <FaBox /> Product Report
-                </Link>
-                <Link
-                  to="stock-report"
-                  onClick={handleMobileNavClick}
-                  className="block py-1 hover:underline"
-                >
-                  <FaWarehouse /> Stock Report
-                </Link>
-              </div>
-            )}
-          </div>
-
-          <div className="border-t border-white/50 pt-4 space-y-2">
-            <div className="flex items-center gap-3">
-              <Avatar
-                size={40}
-                src={profilePic || undefined}
-                icon={!profilePic && <FaUserCircle style={{ fontSize: 40 }} />}
-              />
-              <p className="font-medium">{userName}</p>
-            </div>
-            <Link
-              to="profile"
-              onClick={handleMobileNavClick}
-              className="block py-1 hover:underline flex items-center gap-2"
-            >
-              <FaCog /> Settings
-            </Link>
-            <button
-              onClick={() => setShowTokenModal(true)}
-              className="w-full text-left py-1 hover:underline flex items-center gap-2 text-amber-200"
-            >
-              <FaKey /> FBR Token
-            </button>
-            <button
-              onClick={() => setShowChangePassword(true)}
-              className="w-full text-left py-1 hover:underline flex items-center gap-2 text-amber-200"
-            >
-              <FaLock /> Change Password
-            </button>
-            <Link
-              to="/"
-              onClick={handleMobileNavClick}
-              className="block py-1 hover:underline flex items-center gap-2 text-red-300 font-semibold"
-            >
-              <FaSignOutAlt /> Logout
-            </Link>
-          </div>
-        </div>
-      )}
-
+      {/* Current Page */}
       <hr className="border-t border-white opacity-40" />
       <div className="h-[8vh] text-2xl px-6 py-2 text-left text-white font-medium">
         <span className="font-bold">{currentPage}</span>
       </div>
 
+      {/* Modals */}
       {showChangePassword && (
         <ChangePasswordModal
           visible={showChangePassword}
