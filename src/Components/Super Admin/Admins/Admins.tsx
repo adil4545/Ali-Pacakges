@@ -7,7 +7,7 @@ import Button from "../../UI/Button";
 import {
   useGetAllAdminsQuery,
   useDeleteAdminMutation,
-} from "../../../api/Superadminapi";
+} from "../../../api/SuperAdminapi";
 import type { UserProfile } from "../../../Types/Profile";
 
 export default function Admins() {

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { message } from "antd";
-import { useAddAdminMutation } from "../../../api/Superadminapi"; // ✅ adjust path
+import { useAddAdminMutation } from "../../../api/SuperAdminapi"; // ✅ adjust path
 import type { UserProfile } from "../../../Types/Profile";
 import Button from "../../UI/Button";
 
@@ -39,9 +39,9 @@ export default function AddAdmin() {
 
     try {
       await addAdmin({
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        email: formData.email,
+        first_name: formData.first_name || "",
+        last_name: formData.last_name || "",
+        email: formData.email || "",
         phone: formData.phone.toString(),
         gender: formData.gender,
         sellerBusinessName: formData.sellerBusinessName,

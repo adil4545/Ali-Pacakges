@@ -1,4 +1,4 @@
-import type { Province } from "../Types/Profile";
+import { type Province } from "../Types/Profile";
 
 export const _province: Province[] = [
   {
