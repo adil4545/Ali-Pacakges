@@ -1,31 +1,29 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Select, { type SingleValue } from "react-select";
-import Button from "../../Components/UI/Button";
-import { useGetHSCodeListQuery } from "../../api/ProductsApi";
+import { Form, Input, Select, Row, Col, Card } from "antd";
+import { hsCodeProducts } from "../../Utilities/SelectHsCode";
+import { uomList } from "../../Utilities/SelectUOM";
+import Button from "../../Components/UI/Button"; // 👈 your custom button
 import type { products } from "../../Types/Products";
 
-type OptionType = {
-  value: string | number;
-  label: string; // dropdown ke liye
-};
+const { Option } = Select;
 
 export default function AddProduct() {
   const navigate = useNavigate();
 
-  const { data: rawHsCodes, isLoading, isError } = useGetHSCodeListQuery();
-
-  // API response ko products type me map karo
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const hsCodes: products[] | undefined = rawHsCodes?.map((item: any) => ({
+  // Convert HS data into structure
+  const hsCodes: products[] = hsCodeProducts.map((item) => ({
     id: 0,
-    hscode: item.hS_CODE,
+    hscode: item.hsCode,
     productName: item.description,
-    uom: item.uom || "",
-    tax: item.tax || "",
+    uom: "",
+    tax: "",
+    units: "",
+    salePrice: "",
+    otherType: "",
   }));
 
-  const [form, setForm] = useState<products>({
+  const [formValues, setFormValues] = useState<products>({
     id: 0,
     hscode: "",
     productName: "",
@@ -36,142 +34,141 @@ export default function AddProduct() {
     tax: "",
   });
 
-  // react-select ke liye options
-  const hsOptions: OptionType[] =
-    hsCodes?.map((p) => ({
-      value: p.hscode ?? "", // agar undefined/null hai to empty string daal do
-      label: `${p.hscode ?? ""} - ${p.productName ?? ""}`,
-    })) || [];
+  // Handle changes
+  const handleChange = (changed: Partial<products>) => {
+    setFormValues((prev) => ({ ...prev, ...changed }));
+  };
+
+  const handleSubmit = () => {
+    console.log("Submitted Product:", formValues);
+  };
 
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <div className="bg-white border border-gray-300 rounded-lg shadow-md w-full mt-3 mb-6 mx-4 p-6">
-        <div className="mb-4 ml-2">
-          <h1 className="text-2xl font-extrabold bg-gradient-to-r from-amber-600 to-amber-900 bg-clip-text text-transparent">
+    <div className="bg-gray-50 p-4">
+      <Card
+        bordered
+        className="mt-2 mb-2 mx-4 shadow-sm border-gray-300"
+        style={{ borderRadius: "12px" }}
+      >
+        <div className="mb-2 ml-2">
+          <h1 className="text-xl font-bold bg-gradient-to-r from-amber-600 to-amber-900 bg-clip-text text-transparent">
             Add Product
           </h1>
-          <hr className="mt-2 border-gray-300" />
+          <hr className="mt-1 border-gray-300" />
         </div>
 
-        <form className="mt-6 space-y-4">
-          <div className="grid grid-cols-2 gap-6">
-            {/* HS Code Select */}
-            <div className="flex flex-col">
-              <label className="mb-1 font-medium text-gray-700">
-                <span className="text-red-600">*</span> HS Code
-              </label>
-              <Select<OptionType, false>
-                options={hsOptions}
-                isLoading={isLoading}
-                isDisabled={isError}
-                value={
-                  form.hscode
-                    ? { value: form.hscode, label: `${form.hscode}` } // box me sirf HS Code
-                    : null
-                }
-                onChange={(selected: SingleValue<OptionType>) => {
-                  const found = hsCodes?.find(
-                    (p) => p.hscode === selected?.value
-                  );
-                  if (found) {
-                    setForm({
-                      ...form,
-                      hscode: found.hscode,
-                      productName: found.productName || "",
-                    });
-                  }
-                }}
-                placeholder="Select HS Code"
-                // dropdown me full label show hoga, box me sirf HS code
-                formatOptionLabel={(option, { context }) =>
-                  context === "menu" ? option.label : option.value
-                }
-                styles={{
-                  menu: (base) => ({ ...base, zIndex: 9999 }),
-                  singleValue: (base) => ({
-                    ...base,
-                    fontWeight: "600",
-                    color: "#000",
-                  }),
-                }}
-              />
-            </div>
+        <Form
+          layout="vertical"
+          className="mt-2"
+          onFinish={handleSubmit}
+          initialValues={formValues}
+        >
+          {/* HS Code & Product Name */}
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item label={<>HS Code</>} required>
+                <Select
+                  placeholder="Select HS Code"
+                  value={formValues.hscode || undefined}
+                  onChange={(value) => {
+                    const found = hsCodes.find((p) => p.hscode === value);
+                    if (found)
+                      handleChange({
+                        hscode: found.hscode,
+                        productName: found.productName || "",
+                      });
+                  }}
+                  showSearch
+                  optionFilterProp="label"
+                  style={{ width: "100%" }}
+                >
+                  {hsCodes.map((p) => (
+                    <Option
+                      key={p.hscode}
+                      value={p.hscode}
+                      label={p.productName}
+                    >
+                      {p.hscode} - {p.productName}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
 
-            {/* Product Name */}
-            <div className="flex flex-col">
-              <label className="mb-1 font-medium text-gray-700">
-                <span className="text-red-600">*</span> FBR Product
-              </label>
-              <input
-                type="text"
-                value={form.productName}
-                readOnly
-                className="border rounded-md px-3 py-2 bg-gray-100 cursor-not-allowed truncate"
-                title={form.productName}
-              />
-            </div>
-          </div>
+            <Col span={12}>
+              <Form.Item label={<>FBR Product</>}>
+                <Input
+                  value={formValues.productName}
+                  readOnly
+                  className="bg-gray-100 cursor-not-allowed"
+                />
+              </Form.Item>
+            </Col>
+          </Row>
 
           {/* UOM + Tax */}
-          <div className="grid grid-cols-2 gap-6">
-            <div className="flex flex-col">
-              <label className="mb-1 font-medium text-gray-700">
-                Product UOM
-              </label>
-              <input
-                type="text"
-                value={form.uom}
-                onChange={(e) => setForm({ ...form, uom: e.target.value })}
-                className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-700"
-              />
-            </div>
-            <div className="flex flex-col">
-              <label className="mb-1 font-medium text-gray-700">Tax (%)</label>
-              <input
-                type="text"
-                value={form.tax}
-                onChange={(e) => setForm({ ...form, tax: e.target.value })}
-                className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-700"
-              />
-            </div>
-          </div>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item label="Product UOM">
+                <Select
+                  placeholder="Select UOM"
+                  value={formValues.uom || undefined}
+                  onChange={(value) => handleChange({ uom: value })}
+                  style={{ width: "100%" }}
+                >
+                  {uomList.map((u) => (
+                    <Option key={u.uom_code} value={u.uom_code}>
+                      {u.description}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+
+            <Col span={12}>
+              <Form.Item label="Tax (%)">
+                <Input
+                  value={formValues.tax}
+                  onChange={(e) => handleChange({ tax: e.target.value })}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
 
           {/* Sale Price + Other Type */}
-          <div className="grid grid-cols-2 gap-6">
-            <div className="flex flex-col">
-              <label className="mb-1 font-medium text-gray-700">
-                Sale Price
-              </label>
-              <input
-                type="number"
-                value={form.salePrice}
-                onChange={(e) =>
-                  setForm({ ...form, salePrice: e.target.value })
-                }
-                className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-700"
-              />
-            </div>
-            <div className="flex flex-col">
-              <label className="mb-1 font-medium text-gray-700">
-                Other Type
-              </label>
-              <input
-                type="text"
-                value={form.otherType}
-                onChange={(e) =>
-                  setForm({ ...form, otherType: e.target.value })
-                }
-                className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-700"
-              />
-            </div>
-          </div>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item label="Sale Price">
+                <Input
+                  type="number"
+                  value={formValues.salePrice}
+                  onChange={(e) => handleChange({ salePrice: e.target.value })}
+                />
+              </Form.Item>
+            </Col>
 
-          <div className="flex justify-end gap-4 mt-6">
-            <Button onClick={() => navigate("../Products")}>Cancel</Button>
-            <Button>Submit</Button>
+            <Col span={12}>
+              <Form.Item label="Other Type">
+                <Input
+                  value={formValues.otherType}
+                  onChange={(e) => handleChange({ otherType: e.target.value })}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          {/* Buttons */}
+          <div className="flex justify-end gap-3 mt-2">
+            <Button
+              onClick={() => navigate("../Products")}
+              className="bg-gray-100 hover:bg-gray-200 text-gray-700"
+            >
+              Cancel
+            </Button>
+            <Button className=" text-white hover:opacity-90">Submit</Button>
           </div>
-        </form>
-      </div>
+        </Form>
+      </Card>
     </div>
   );
 }

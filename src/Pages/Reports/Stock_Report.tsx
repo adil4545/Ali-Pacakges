@@ -1,82 +1,92 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
+import { Card, Form, Select, DatePicker, Button } from "antd";
 
 export default function Stock_Report() {
-  const [item, setItem] = useState("");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+  const [form] = Form.useForm();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (values: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    item: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    fromDate: { format: (arg0: string) => any };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    toDate: { format: (arg0: string) => any };
+  }) => {
     alert(`
-      Selected Item: ${item}
-      From: ${fromDate}
-      To: ${toDate}
+      Selected Item: ${values.item}
+      From: ${values.fromDate?.format("YYYY-MM-DD")}
+      To: ${values.toDate?.format("YYYY-MM-DD")}
     `);
   };
 
   return (
-    <div className="mx-4 my-6 p-6 bg-gray-50 rounded-lg shadow-md">
-      <motion.h1
-        initial={{ opacity: 0, y: -15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="text-2xl mb-4 font-extrabold bg-gradient-to-r from-amber-600 to-amber-900 bg-clip-text text-transparent"
+    <motion.div
+      initial={{ opacity: 0, y: -15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="mx-4 my-6"
+    >
+      <Card
+        title={
+          <h1 className="text-2xl font-extrabold bg-gradient-to-r from-amber-600 to-amber-900 bg-clip-text text-transparent">
+            Stock Report
+          </h1>
+        }
+        className="shadow-md rounded-lg"
       >
-       Stock Report
-      </motion.h1>
-
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Select Item (Full width) */}
-        <div className="md:col-span-2">
-          <label className="block text-gray-700 font-medium mb-1">Select Item</label>
-          <select
-            value={item}
-            onChange={(e) => setItem(e.target.value)}
-            className="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-600"
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+        >
+          {/* Select Item (Full width) */}
+          <Form.Item
+            label="Select Item"
+            name="item"
+            className="md:col-span-2"
+            rules={[{ required: true, message: "Please select an item" }]}
           >
-            <option value="">-- Select --</option>
-            <option value="Steel">Steel</option>
-            <option value="Cement">Cement</option>
-            <option value="Bricks">Bricks</option>
-            <option value="Iron">Iron</option>
-          </select>
-        </div>
+            <Select placeholder="-- Select --">
+              <Select.Option value="Steel">Steel</Select.Option>
+              <Select.Option value="Cement">Cement</Select.Option>
+              <Select.Option value="Bricks">Bricks</Select.Option>
+              <Select.Option value="Iron">Iron</Select.Option>
+            </Select>
+          </Form.Item>
 
-        {/* From Date */}
-        <div>
-          <label className="block text-gray-700 font-medium mb-1">From</label>
-          <input
-            type="date"
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-            className="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-600"
-          />
-        </div>
-
-        {/* To Date */}
-        <div>
-          <label className="block text-gray-700 font-medium mb-1">To</label>
-          <input
-            type="date"
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-            className="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-600"
-          />
-        </div>
-
-        {/* Submit Button */}
-        <div className="md:col-span-2 flex justify-end mt-4">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            type="submit"
-            className="px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-900 text-white font-semibold rounded-md shadow hover:opacity-90 transition"
+          {/* From Date */}
+          <Form.Item
+            label="From"
+            name="fromDate"
+            rules={[{ required: true, message: "Please select From Date" }]}
           >
-            Find
-          </motion.button>
-        </div>
-      </form>
-    </div>
+            <DatePicker className="w-full" format="YYYY-MM-DD" />
+          </Form.Item>
+
+          {/* To Date */}
+          <Form.Item
+            label="To"
+            name="toDate"
+            rules={[{ required: true, message: "Please select To Date" }]}
+          >
+            <DatePicker className="w-full" format="YYYY-MM-DD" />
+          </Form.Item>
+
+          {/* Submit Button */}
+          <Form.Item className="md:col-span-2 flex justify-end mt-4">
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                type="primary"
+                htmlType="submit"
+                className="bg-gradient-to-r from-amber-600 to-amber-900 text-white font-semibold"
+              >
+                Find
+              </Button>
+            </motion.div>
+          </Form.Item>
+        </Form>
+      </Card>
+    </motion.div>
   );
 }

@@ -8,7 +8,7 @@ import {
 } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { MdNavigateBefore, MdNavigateNext } from "react-icons/md";
-import { Link } from "react-router-dom"; // 👈 yeh import add kiya
+import { Link } from "react-router-dom";
 
 export default function Sales_Tax_List() {
   const [data, setData] = useState([
@@ -23,96 +23,159 @@ export default function Sales_Tax_List() {
       party: "OSAKA STEEL PVT LTD",
       posted: false,
     },
-    {
-      id: 2,
-      date: "2025-09-12",
-      invoiceNo: "1001",
-      exTax: 8000.0,
-      tax: 1280.0,
-      qty: 2.0,
-      grandTotal: 9280.0,
-      party: "SUNRISE TRADERS",
-      posted: false,
-    },
   ]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const entriesPerPage = 5;
 
-  // delete function
   const handleDelete = (id: number) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this record?"
-    );
-    if (confirmDelete) {
+    if (window.confirm("Are you sure you want to delete this record?")) {
       setData(data.filter((item) => item.id !== id));
     }
   };
 
-  // dummy post to FBR
-  const handlePostToFBR = async (id: number) => {
-    alert("Posting to FBR...");
-    setTimeout(() => {
-      setData((prev) =>
-        prev.map((item) => (item.id === id ? { ...item, posted: true } : item))
-      );
-      alert("Successfully posted to FBR!");
-    }, 1500);
-  };
+  // ✅ Clean & professional print layout
 
-  // print function
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handlePrint = (item: any) => {
-    // 👇 yaha se print ka kaam ho raha
-    const printWindow = window.open("", "_blank", "width=800,height=600");
-    if (printWindow) {
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>Print Invoice - ${item.invoiceNo}</title>
-            <style>
-              body { font-family: Arial, sans-serif; padding: 20px; }
-              h2 { color: green; }
-              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-              th, td { border: 1px solid #333; padding: 8px; text-align: left; }
-              th { background: #f2f2f2; }
-            </style>
-          </head>
-          <body>
-            <h2>Credit Note Invoice</h2>
-            <p><strong>Invoice No:</strong> ${item.invoiceNo}</p>
-            <p><strong>Date:</strong> ${item.date}</p>
-            <p><strong>Party:</strong> ${item.party}</p>
+  const handlePrint = async (item: any) => {
+    // 1️⃣ Create FBR link
+    const qrData = `https://e.fbr.gov.pk/invoice/${item.invoiceNo}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(
+      qrData
+    )}`;
+
+    // 2️⃣ Fetch QR image & convert to Base64
+    const response = await fetch(qrUrl);
+    const blob = await response.blob();
+    const reader = new FileReader();
+    const qrBase64: string = await new Promise((resolve) => {
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(blob);
+    });
+
+    // 3️⃣ Print content
+    const printWindow = window.open("", "_blank", "width=900,height=1000");
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Sales Tax Invoice - ${item.invoiceNo}</title>
+          <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+          <style>
+            @page { size: A4; margin: 15mm; }
+            body { font-family: 'Segoe UI', sans-serif; background: white; color: #111827; }
+            .invoice-box { max-width: 800px; margin: auto; padding: 20px; }
+            table { width: 100%; border-collapse: collapse; font-size: 13px; }
+            th, td { border: 1px solid #d1d5db; padding: 8px; }
+            th { background-color: #f9fafb; text-align: center; font-weight: 600; }
+            td { text-align: right; }
+            td.text-left { text-align: left; }
+            .signature-line { border-top: 1px solid #6b7280; width: 180px; margin-top: 40px; }
+            .header { text-align: center; margin-bottom: 25px; }
+            .header h1 { font-size: 22px; font-weight: 700; color: #111827; }
+            .header p { font-size: 13px; color: #374151; }
+            .buyer-info { margin-bottom: 20px; font-size: 13px; }
+            .totals td { border: none; padding: 4px 8px; }
+            .totals tr td:first-child { text-align: left; }
+          </style>
+        </head>
+        <body>
+          <div class="invoice-box">
+
+            <!-- Header -->
+            <div class="header">
+              <h1>DEAZITEACH</h1>
+              <p>NTN: 3520281536803 | PHONE: +92 3-- ---------</p>
+              <p> Lahore</p>
+              <h2 class="text-lg font-semibold underline mt-3">SALES TAX INVOICE</h2>
+            </div>
+
+            <!-- Buyer Info -->
+            <div class="buyer-info grid grid-cols-2 gap-4">
+              <div>
+                <p><strong>Buyer Name:</strong> ${item.party}</p>
+                <p><strong>Buyer NTN:</strong> 4991899</p>
+                <p><strong>Address:</strong> Dummy Address</p>
+                <p><strong>Reg Type:</strong> Unregistered</p>
+              </div>
+              <div class="text-right">
+                <p><strong>Invoice #:</strong> ${item.invoiceNo}</p>
+                <p><strong>Date:</strong> ${item.date}</p>
+              </div>
+            </div>
+
+            <!-- Table -->
             <table>
               <thead>
                 <tr>
-                  <th>Ex. Tax Value</th>
-                  <th>Tax Value</th>
-                  <th>Total Qty</th>
-                  <th>Grand Total</th>
+                  <th>Qty</th>
+                  <th class="text-left">Description</th>
+                  <th>Rate</th>
+                  <th>Value Exc. ST</th>
+                  <th>S.T%</th>
+                  <th>S.T Value</th>
+                  <th>Value Inc. ST</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
+                  <td class="text-center">${item.qty}</td>
+                  <td class="text-left">Test Product</td>
                   <td>${item.exTax.toFixed(2)}</td>
+                  <td>${item.exTax.toFixed(2)}</td>
+                  <td class="text-center">18%</td>
                   <td>${item.tax.toFixed(2)}</td>
-                  <td>${item.qty.toFixed(2)}</td>
                   <td>${item.grandTotal.toFixed(2)}</td>
                 </tr>
               </tbody>
             </table>
-            <script>
-              window.print();
-            </script>
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-    }
+
+            <!-- Totals -->
+            <div class="flex justify-end mt-6">
+              <table class="totals">
+                <tr><td>Total Exc. ST:</td><td>Rs ${item.exTax.toFixed(
+                  2
+                )}</td></tr>
+                <tr><td>Total Tax:</td><td>Rs ${item.tax.toFixed(2)}</td></tr>
+                <tr><td><strong>Total Amount:</strong></td><td><strong>Rs ${item.grandTotal.toFixed(
+                  2
+                )}</strong></td></tr>
+              </table>
+            </div>
+
+            <!-- Signature + QR -->
+            <div class="flex justify-between items-center mt-12">
+              <div>
+                <p class="font-medium">Authorized Signature:</p>
+                <div class="signature-line"></div>
+              </div>
+
+              <div class="text-center">
+                <a href="${qrData}" target="_blank">
+                  <img src="${qrBase64}" alt="FBR QR Code" class="mx-auto"/>
+                </a>
+                <p class="text-xs mt-2 text-gray-700 font-medium">FBR Invoice No: ${
+                  item.invoiceNo
+                }</p>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="text-center text-xs text-gray-600 mt-10 border-t pt-3">
+              THANK YOU FOR YOUR BUSINESS
+            </div>
+          </div>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.print();
   };
 
-  // search filter
+  // pagination logic
   const filteredData =
     searchTerm.trim() === ""
       ? data
@@ -122,7 +185,6 @@ export default function Sales_Tax_List() {
             item.party.toLowerCase().includes(searchTerm.toLowerCase())
         );
 
-  // pagination logic
   const totalPages = Math.ceil(filteredData.length / entriesPerPage);
   const indexOfLast = currentPage * entriesPerPage;
   const indexOfFirst = indexOfLast - entriesPerPage;
@@ -134,7 +196,7 @@ export default function Sales_Tax_List() {
 
   return (
     <div className="mx-2 my-2 mb-4 bg-gray-50 rounded-lg shadow-md p-6 flex flex-col">
-      {/* Top Section */}
+      {/* Header */}
       <div className="flex items-center justify-between px-4 mb-10">
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
@@ -146,13 +208,7 @@ export default function Sales_Tax_List() {
         </motion.h1>
 
         <div className="flex items-center gap-4">
-          {/* Search Box */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-            className="relative"
-          >
+          <div className="relative">
             <input
               type="text"
               placeholder="Search by Invoice or Party..."
@@ -164,9 +220,8 @@ export default function Sales_Tax_List() {
               className="pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-700"
             />
             <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-          </motion.div>
+          </div>
 
-          {/* Add Sales tax Button */}
           <Link to="/admin/sales-tax-invoice">
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -179,7 +234,7 @@ export default function Sales_Tax_List() {
         </div>
       </div>
 
-      {/* Table Section */}
+      {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full border-collapse bg-white rounded-md shadow-sm">
           <thead>
@@ -193,7 +248,7 @@ export default function Sales_Tax_List() {
               <th className="p-3 text-left">GRAND TOTAL</th>
               <th className="p-3 text-left">PARTY</th>
               <th className="p-3 text-left">PRINT</th>
-              <th className="p-3 text-left">Actions</th>
+              <th className="p-3 text-left">ACTIONS</th>
             </tr>
           </thead>
           <tbody>
@@ -215,53 +270,41 @@ export default function Sales_Tax_List() {
                   <td className="p-3">{item.grandTotal.toFixed(2)}</td>
                   <td className="p-3">{item.party}</td>
                   <td className="p-3">
-                    <motion.button
-                      whileHover={{ scale: 1.2 }}
-                      whileTap={{ scale: 0.9 }}
+                    <button
                       className="text-green-600 hover:text-green-800"
-                      onClick={() => handlePrint(item)} // 👈 ab yaha print preview khulega
+                      onClick={() => handlePrint(item)}
                     >
                       <FaPrint size={18} />
-                    </motion.button>
+                    </button>
                   </td>
                   <td className="p-3 flex gap-3 items-center">
-                    {/* Delete Button */}
-                    <motion.button
-                      whileHover={{ rotate: [0, -10, 10, -10, 0] }}
-                      transition={{ duration: 0.5 }}
+                    <button
                       onClick={() => handleDelete(item.id)}
                       className="text-red-600 hover:text-red-800"
                     >
                       <FaRegTrashAlt size={20} />
-                    </motion.button>
+                    </button>
 
-                    {/* Post to FBR */}
                     {item.posted ? (
                       <span className="flex items-center gap-1 text-green-600 font-medium">
                         <FaCheckCircle /> Posted
                       </span>
                     ) : (
-                      <motion.button
-                        whileTap={{ scale: 0.95 }}
+                      <button
                         className="px-3 py-1 text-xs bg-orange-500 text-white rounded-md hover:bg-orange-600"
-                        onClick={() => handlePostToFBR(item.id)}
+                        onClick={() => alert("Posting to FBR...")}
                       >
                         Post to FBR
-                      </motion.button>
+                      </button>
                     )}
                   </td>
                 </motion.tr>
               ))
             ) : (
               <tr>
-                <td colSpan={10} className="py-10">
-                  <div className="flex flex-col items-center text-gray-500">
-                    <FaBoxOpen
-                      size={40}
-                      className="mb-2 text-gray-400 animate-pulse"
-                    />
-                    No records found
-                  </div>
+                <td colSpan={10} className="py-10 text-center text-gray-500">
+                  <FaBoxOpen size={40} className="mx-auto mb-2 text-gray-400" />
+                  No records found
                 </td>
               </tr>
             )}
@@ -269,11 +312,10 @@ export default function Sales_Tax_List() {
         </table>
       </div>
 
-      {/* Pagination Controls */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex justify-end mt-6 pr-2">
           <div className="flex items-center gap-2">
-            {/* Prev */}
             <button
               onClick={() => goToPage(currentPage - 1)}
               disabled={currentPage === 1}
@@ -285,34 +327,6 @@ export default function Sales_Tax_List() {
             >
               <MdNavigateBefore size={22} />
             </button>
-
-            {/* Page Numbers */}
-            {Array.from({ length: totalPages }, (_, i) => i + 1)
-              .filter(
-                (page) =>
-                  Math.abs(page - currentPage) <= 1 ||
-                  page === 1 ||
-                  page === totalPages
-              )
-              .map((page, i, arr) => (
-                <div key={page} className="flex items-center">
-                  <button
-                    onClick={() => goToPage(page)}
-                    className={`px-3 py-1 rounded-md ${
-                      currentPage === page
-                        ? "bg-green-700 text-white"
-                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                  {i < arr.length - 1 && arr[i + 1] !== page + 1 && (
-                    <span className="px-1">...</span>
-                  )}
-                </div>
-              ))}
-
-            {/* Next */}
             <button
               onClick={() => goToPage(currentPage + 1)}
               disabled={currentPage === totalPages}

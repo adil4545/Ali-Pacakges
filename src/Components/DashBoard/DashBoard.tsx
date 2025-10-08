@@ -20,7 +20,7 @@ function Dashboard() {
   useEffect(() => {
     if (location.state?.loginSuccess) {
       setShowAlert(true);
-      // Clear state so notification doesn't repeat
+
       window.history.replaceState({}, document.title);
       const timer = setTimeout(() => setShowAlert(false), 2000);
       return () => clearTimeout(timer);
@@ -80,7 +80,6 @@ function Dashboard() {
 
   return (
     <div className="w-full flex flex-col items-center bg-gray-50 py-6 min-h-screen relative">
-      {/* Success Notification */}
       <AnimatePresence>
         {showAlert && (
           <motion.div
@@ -96,7 +95,6 @@ function Dashboard() {
         )}
       </AnimatePresence>
 
-      {/* Heading */}
       <motion.h1
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -106,7 +104,6 @@ function Dashboard() {
         Welcome Ali Package
       </motion.h1>
 
-      {/* Grid Layout */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 w-[95%] mb-6">
         {items.map((item, index) => (
           <motion.div

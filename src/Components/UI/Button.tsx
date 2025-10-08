@@ -12,6 +12,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={ref}
+        type={"submit"} // ✅ use the type prop
         onClick={onClick}
         disabled={disabled}
         className={`px-8 py-2 rounded-md font-medium 
@@ -24,6 +25,6 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   }
 );
 
-Button.displayName = "Button"; // ⚡ recommended for forwardRef components
+Button.displayName = "Button";
 
 export default Button;

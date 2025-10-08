@@ -1,4 +1,4 @@
-import type { Party } from "./Party";
+import type { Party, Province } from "./Party";
 import type { products } from "./Products";
 
 export interface Invoice {
@@ -9,14 +9,14 @@ export interface Invoice {
   invoiceNo: string;
   address: string;
   ntn: string;
-  province: string;
+  province: Province;
 
   productId?: number;
-  hscode?: number;
+  hscode?: number | string;
   units?: string;
   quantity: number;
   price: number;
-  stPercent: number;
+  stPercent?: number | string;
   taxValue: number;
   valueExTax: number;
   valueIncTax: number;

@@ -2,14 +2,24 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
-import type { Party } from "../../Types/Party";
+import { Form, Input, Select, Card, message } from "antd";
+import type {
+  Party as PartyType,
+  Province as ProvinceType,
+} from "../../Types/Party";
+import { _province } from "../../Utilities/SelectProvince";
+import { partyType } from "../../Utilities/PartyType";
 import Button from "../../Components/UI/Button";
+
+const { Option } = Select;
 
 export default function EditParty() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
-  const [formData, setFormData] = useState<Party>({
+  const [form] = Form.useForm();
+
+  const [formData, setFormData] = useState<PartyType>({
     id: Number(id),
     ntn: "",
     partyName: "",
@@ -18,112 +28,107 @@ export default function EditParty() {
     cnic: "",
     strn: "",
     registrationNo: "",
-    province: "",
+    province: undefined as unknown as ProvinceType,
     address: "",
   });
 
-  // Simulate fetching from localStorage (replace with API)
   useEffect(() => {
-    const storedParties: Party[] = JSON.parse(
+    const storedParties: PartyType[] = JSON.parse(
       localStorage.getItem("parties") || "[]"
     );
     const party = storedParties.find((p) => p.id === Number(id));
 
     if (party) {
       setFormData(party);
+      form.setFieldsValue({
+        ...party,
+        province: party.province?.stateProvinceDesc,
+      });
     }
-  }, [id]);
+  }, [id, form]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleSubmit = (values: any) => {
+    const updatedParty: PartyType = {
+      ...formData,
+      ...values,
+      province: { stateProvinceDesc: values.province } as ProvinceType,
+    };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    let storedParties: Party[] = JSON.parse(
+    let storedParties: PartyType[] = JSON.parse(
       localStorage.getItem("parties") || "[]"
     );
 
     storedParties = storedParties.map((p) =>
-      p.id === Number(id) ? { ...p, ...formData } : p
+      p.id === Number(id) ? updatedParty : p
     );
 
     localStorage.setItem("parties", JSON.stringify(storedParties));
 
-    alert("Party updated successfully!");
+    message.success("Party updated successfully!");
     navigate("/AdminDashBoardLayout/Parties");
   };
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      <div className="bg-white border border-gray-300 rounded-lg shadow-md w-full mt-3 mb-6 mx-4 p-6">
-        {/* Top Section */}
-        <div className="mb-4 ml-2">
+      <Card
+        title={
           <h1 className="text-2xl font-extrabold bg-gradient-to-r from-amber-600 to-amber-900 bg-clip-text text-transparent">
             Edit Party
           </h1>
-          <hr className="mt-2 border-gray-300" />
-        </div>
-
-        {/* Form Section */}
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        }
+        className="w-full mt-3 mb-6 mx-4 shadow-md"
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={formData}
+          onFinish={handleSubmit}
+        >
           <div className="grid grid-cols-2 gap-6">
             {/* NTN */}
-            <div className="flex flex-col">
-              <label className="mb-1 font-medium text-gray-700">
-                <span className="text-red-600">*</span> NTN
-              </label>
-              <input
-                type="text"
-                name="ntn"
-                value={formData.ntn}
-                onChange={handleChange}
-                className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-700"
-                required
-              />
-            </div>
+            <Form.Item
+              label="NTN"
+              name="ntn"
+              className="!mb-2"
+              rules={[{ required: true, message: "Please enter NTN" }]}
+            >
+              <Input />
+            </Form.Item>
 
             {/* Party Name */}
-            <div className="flex flex-col">
-              <label className="mb-1 font-medium text-gray-700">
-                <span className="text-red-600">*</span> Party Name
-              </label>
-              <input
-                type="text"
-                name="partyName"
-                value={formData.partyName}
-                onChange={handleChange}
-                className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-700"
-                required
-              />
-            </div>
+            <Form.Item
+              label="Party Name"
+              name="partyName"
+              className="!mb-2"
+              rules={[{ required: true, message: "Please enter Party Name" }]}
+            >
+              <Input />
+            </Form.Item>
 
             {/* Party Type */}
-            <div className="flex flex-col">
-              <label className="mb-1 font-medium text-gray-700">
-                <span className="text-red-600">*</span> Party Type
-              </label>
-              <select
-                name="partyType"
-                value={formData.partyType}
-                onChange={handleChange}
-                className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-700"
-                required
-              >
-                <option value="">Select Type</option>
-                <option value="Customer">Customer</option>
-                <option value="Supplier">Supplier</option>
-              </select>
-            </div>
+            <Form.Item
+              label="Party Type"
+              name="partyType"
+              className="!mb-2"
+              rules={[{ required: true, message: "Please select Party Type" }]}
+            >
+              <Select placeholder="Select Type">
+                {partyType.map((type) => (
+                  <Option key={type.partyType} value={type.partyType}>
+                    {type.label}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
 
             {/* Phone */}
-            <div className="flex flex-col">
-              <label className="mb-1 font-medium text-gray-700">
-                <span className="text-red-600">*</span> Phone Number
-              </label>
+            <Form.Item
+              label="Phone Number"
+              name="phone"
+              className="!mb-2"
+              rules={[{ required: true, message: "Please enter phone number" }]}
+            >
               <PhoneInput
                 country={"pk"}
                 value={formData.phone}
@@ -133,97 +138,77 @@ export default function EditParty() {
                 enableSearch={false}
                 disableDropdown={true}
               />
-            </div>
+            </Form.Item>
 
             {/* CNIC */}
-            <div className="flex flex-col">
-              <label className="mb-1 font-medium text-gray-700">
-                <span className="text-red-600">*</span> CNIC
-              </label>
-              <input
-                type="text"
-                name="cnic"
-                value={formData.cnic}
-                onChange={handleChange}
-                className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-700"
-                required
-              />
-            </div>
+            <Form.Item
+              label="CNIC"
+              name="cnic"
+              className="!mb-2"
+              rules={[{ required: true, message: "Please enter CNIC" }]}
+            >
+              <Input />
+            </Form.Item>
 
             {/* STRN */}
-            <div className="flex flex-col">
-              <label className="mb-1 font-medium text-gray-700">
-                <span className="text-red-600">*</span> STRN
-              </label>
-              <input
-                type="text"
-                name="strn"
-                value={formData.strn}
-                onChange={handleChange}
-                className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-700"
-                required
-              />
-            </div>
+            <Form.Item
+              label="STRN"
+              name="strn"
+              className="!mb-2"
+              rules={[{ required: true, message: "Please enter STRN" }]}
+            >
+              <Input />
+            </Form.Item>
 
-            {/* Registration No. */}
-            <div className="flex flex-col">
-              <label className="mb-1 font-medium text-gray-700">
-                <span className="text-red-600">*</span> Registration No.
-              </label>
-              <input
-                type="text"
-                name="registrationNo"
-                value={formData.registrationNo}
-                onChange={handleChange}
-                className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-700"
-                required
-              />
-            </div>
+            {/* Registration No */}
+            <Form.Item
+              label="Registration No."
+              name="registrationNo"
+              className="!mb-2"
+              rules={[
+                { required: true, message: "Please enter Registration No." },
+              ]}
+            >
+              <Input />
+            </Form.Item>
 
             {/* Province */}
-            <div className="flex flex-col">
-              <label className="mb-1 font-medium text-gray-700">
-                <span className="text-red-600">*</span> Province
-              </label>
-              <select
-                name="province"
-                value={formData.province}
-                onChange={handleChange}
-                className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-700"
-                required
-              >
-                <option value="">Select Province</option>
-                <option value="Punjab">Punjab</option>
-                <option value="Sindh">Sindh</option>
-                <option value="KPK">KPK</option>
-                <option value="Balochistan">Balochistan</option>
-                <option value="GB">Gilgit Baltistan</option>
-              </select>
-            </div>
+            <Form.Item
+              label="Province"
+              name="province"
+              className="!mb-2"
+              rules={[{ required: true, message: "Please select Province" }]}
+            >
+              <Select placeholder="Select Province">
+                {_province.map((prov) => (
+                  <Option
+                    key={prov.stateProvinceCode}
+                    value={prov.stateProvinceDesc}
+                  >
+                    {prov.stateProvinceDesc}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
 
             {/* Address */}
-            <div className="flex flex-col col-span-2">
-              <label className="mb-1 font-medium text-gray-700">
-                <span className="text-red-600">*</span> Address
-              </label>
-              <input
-                type="text"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-700 w-full"
-                required
-              />
-            </div>
+            <Form.Item
+              label="Address"
+              name="address"
+              className="col-span-2 !mb-2"
+              rules={[{ required: true, message: "Please enter Address" }]}
+            >
+              <Input />
+            </Form.Item>
           </div>
 
           {/* Buttons */}
-          <div className="flex justify-end gap-4 mt-6">
+          <div className="flex justify-end gap-4 mt-2">
             <Button onClick={() => navigate("../Parties")}>Cancel</Button>
             <Button>Update</Button>
           </div>
-        </form>
-      </div>
+        </Form>
+      </Card>
     </div>
   );
 }

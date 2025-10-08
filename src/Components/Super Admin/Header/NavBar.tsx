@@ -36,6 +36,10 @@ function NavBar({ userName = "John Doe", profilePic }: NavbarProps) {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(" ");
 
+  const handelLocalStorageClear = () => {
+    localStorage.clear();
+  };
+
   return (
     <div className="w-full bg-gradient-to-r from-amber-600 to-amber-900 text-white shadow-lg">
       {/* Navbar */}
@@ -103,7 +107,10 @@ function NavBar({ userName = "John Doe", profilePic }: NavbarProps) {
 
               <Link
                 to="/"
-                onClick={() => setOpenProfile(false)}
+                onClick={() => {
+                  setOpenProfile(false);
+                  handelLocalStorageClear();
+                }}
                 className="w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2 text-red-500 font-semibold"
               >
                 <FaSignOutAlt /> Logout

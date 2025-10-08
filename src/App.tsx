@@ -62,7 +62,7 @@ function App() {
           <Route path="stock-report" element={<Stock_Report />} />
         </Route>
 
-        <Route path="/super-admin" element={<SuperAdmin />}>
+        <Route path="/SuperAdmin" element={<SuperAdmin />}>
           <Route index element={<SuperAdminDashboard />} />
           <Route path="dashboard" element={<SuperAdminDashboard />} />
           <Route path="admins" element={<Admins />} />

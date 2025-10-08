@@ -1,75 +1,87 @@
 import { useState } from "react";
+import { Form, Input, Card, Row, Col, message } from "antd";
+import Select, { type SingleValue } from "react-select";
+import Button from "../../Components/UI/Button";
 import type { Party } from "../../Types/Party";
 import type { products } from "../../Types/Products";
 import type { Invoice } from "../../Types/Invoice";
-import Button from "../../Components/UI/Button";
+import { hsCodeProducts } from "../../Utilities/SelectHsCode";
+import { uomList } from "../../Utilities/SelectUOM";
+
+type OptionType = {
+  value: string;
+  label: string;
+};
+
 export default function Sales_Tax_Invoice() {
-  // Parties Dummy Data
+  const [invoiceCounter, setInvoiceCounter] = useState(1000);
+
+  // Dummy parties
   const parties: Party[] = [
     {
       id: 1,
       partyName: "ABC Traders",
       address: "Lahore",
       ntn: "1234567",
-      province: "Punjab",
+      province: { stateProvinceCode: 7, stateProvinceDesc: "Punjab" },
     },
     {
       id: 2,
       partyName: "XYZ Enterprises",
       address: "Karachi",
       ntn: "9876543",
-      province: "Sindh",
+      province: { stateProvinceCode: 8, stateProvinceDesc: "Sindh" },
     },
   ];
 
-  // Products Dummy Data
-  const products: products[] = [
-    { id: 1, productName: "Product A", units: "Box" },
-    { id: 2, productName: "Product B", units: "Kg" },
-  ];
+  // HS Code Products
+  const hsCodes: products[] = hsCodeProducts.map((item, index) => ({
+    id: index + 1,
+    hscode: item.hsCode,
+    productName: item.description,
+  }));
 
-  // Invoice form data
+  const hsOptions: OptionType[] = hsCodes.map((p) => ({
+    value: String(p.hscode),
+    label: `${p.hscode} - ${p.productName}`,
+  }));
+
+  // UOM Options
+  const uomOptions: OptionType[] = uomList.map((u) => ({
+    value: u.uom_code,
+    label: u.description,
+  }));
+
   const [formData, setFormData] = useState<Invoice>({
     date: "",
     voucherNo: "",
     remarks: "",
     pOrder: "",
-    invoiceNo: "",
+    invoiceNo: invoiceCounter.toString(),
     address: "",
     ntn: "",
-    province: "",
+    province: { stateProvinceCode: 0, stateProvinceDesc: "" },
     quantity: 0,
     valueExTax: 0,
     price: 0,
     stPercent: 0,
     valueIncTax: 0,
     taxValue: 0,
+    hscode: "",
+    productId: 0,
+    units: "",
     party: undefined,
     products: undefined,
   });
 
-  // Product rows
   const [productRows, setProductRows] = useState<Invoice[]>([]);
 
   // Totals
-  const totalQuantity = productRows.reduce(
-    (acc, row) => acc + (row.quantity || 0),
-    0
-  );
-  const totalTax = productRows.reduce(
-    (acc, row) => acc + (row.taxValue || 0),
-    0
-  );
-  const totalExTax = productRows.reduce(
-    (acc, row) => acc + (row.valueExTax || 0),
-    0
-  );
-  const totalIncTax = productRows.reduce(
-    (acc, row) => acc + (row.valueIncTax || 0),
-    0
-  );
+  const totalQuantity = productRows.reduce((a, r) => a + (r.quantity || 0), 0);
+  const totalTax = productRows.reduce((a, r) => a + (r.taxValue || 0), 0);
+  const totalExTax = productRows.reduce((a, r) => a + (r.valueExTax || 0), 0);
+  const totalIncTax = productRows.reduce((a, r) => a + (r.valueIncTax || 0), 0);
 
-  // Handle Party Select
   const handlePartyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const partyId = Number(e.target.value);
     const selected = parties.find((p) => p.id === partyId);
@@ -83,12 +95,11 @@ export default function Sales_Tax_Invoice() {
     });
   };
 
-  // Add Product Row
   const addProductRow = () => {
     setProductRows([
       ...productRows,
       {
-        hscode: 0,
+        hscode: "",
         productId: 0,
         units: "",
         quantity: 0,
@@ -103,15 +114,14 @@ export default function Sales_Tax_Invoice() {
         voucherNo: "",
         remarks: "",
         pOrder: "",
-        invoiceNo: "",
+        invoiceNo: (invoiceCounter + 1).toString(),
         address: "",
         ntn: "",
-        province: "",
+        province: { stateProvinceCode: 0, stateProvinceDesc: "" },
       },
     ]);
   };
 
-  // Update Product Row
   const updateProductRow = <K extends keyof Invoice>(
     index: number,
     field: K,
@@ -120,10 +130,9 @@ export default function Sales_Tax_Invoice() {
     const updated = [...productRows];
     updated[index] = { ...updated[index], [field]: value };
 
-    // Auto calculations
-    const qty = updated[index].quantity || 0;
-    const price = updated[index].price || 0;
-    const stPercent = updated[index].stPercent || 0;
+    const qty = Number(updated[index].quantity) || 0;
+    const price = Number(updated[index].price) || 0;
+    const stPercent = Number(updated[index].stPercent) || 0;
 
     updated[index].valueExTax = qty * price;
     updated[index].taxValue = (updated[index].valueExTax * stPercent) / 100;
@@ -133,222 +142,184 @@ export default function Sales_Tax_Invoice() {
     setProductRows(updated);
   };
 
-  // Remove Product Row
   const removeProductRow = (index: number) => {
     setProductRows(productRows.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Invoice Saved:", { formData, productRows });
-    alert("Sales Tax Invoice Saved!");
+  const handleSubmit = () => {
+    message.success("Sales Tax Invoice Saved!");
+    console.log("Sales Tax Invoice Saved:", { formData, productRows });
+    setInvoiceCounter((prev) => prev + 1);
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen p-6">
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Invoice Info */}
-        <div className="bg-white p-6 shadow rounded-lg">
-          <h2 className="text-2xl font-extrabold bg-gradient-to-r from-amber-600 to-amber-900 bg-clip-text text-transparent mb-4">
-            Sales Tax Invoice
-          </h2>
+    <Form layout="vertical" onFinish={handleSubmit} className="space-y-4">
+      {/* Header */}
+      <Card title="Sales Tax Invoice">
+        {/* Use 2 columns instead of 3 */}
+        <div className="grid grid-cols-2 gap-4">
+          {/* Row 1 */}
+          <Form.Item label="Date" required className="w-full">
+            <Input
+              type="date"
+              value={formData.date}
+              onChange={(e) =>
+                setFormData({ ...formData, date: e.target.value })
+              }
+            />
+          </Form.Item>
 
-          <div className="grid grid-cols-3 gap-6">
-            {/* Date */}
-            <div>
-              <label className="block font-medium mb-1">
-                <span className="text-red-600">*</span> Date
-              </label>
-              <input
-                type="date"
-                value={formData.date}
-                onChange={(e) =>
-                  setFormData({ ...formData, date: e.target.value })
-                }
-                className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-amber-600 outline-none"
-                required
-              />
-            </div>
-
-            {/* Select Party */}
-            <div>
-              <label className="block font-medium mb-1">
-                <span className="text-red-600">*</span> Select Party
-              </label>
-              <select
-                onChange={handlePartyChange}
-                className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-amber-600 outline-none"
-                required
-              >
-                <option value="">Select Party</option>
-                {parties.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.partyName}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Invoice No */}
-            <div>
-              <label className="block font-medium mb-1">Invoice No#</label>
-              <input
-                type="text"
-                value={formData.invoiceNo}
-                readOnly
-                className="w-full border rounded px-3 py-2 bg-gray-100"
-              />
-            </div>
-          </div>
-
-          {/* Address, NTN, Province */}
-          <div className="grid grid-cols-3 gap-6 mt-4">
-            <div>
-              <label className="block font-medium mb-1">Address</label>
-              <input
-                type="text"
-                value={formData.address}
-                readOnly
-                className="w-full border rounded px-3 py-2 bg-gray-100"
-              />
-            </div>
-
-            <div>
-              <label className="block font-medium mb-1">Seller NTN/CNIC</label>
-              <input
-                type="text"
-                value={formData.ntn}
-                readOnly
-                className="w-full border rounded px-3 py-2 bg-gray-100"
-              />
-            </div>
-
-            <div>
-              <label className="block font-medium mb-1">Province</label>
-              <input
-                type="text"
-                value={formData.province}
-                readOnly
-                className="w-full border rounded px-3 py-2 bg-gray-100"
-              />
-            </div>
-          </div>
-
-          {/* Purchase Order + Document Ref */}
-          <div className="grid grid-cols-2 gap-6 mt-4">
-            <div>
-              <label className="block font-medium mb-1">
-                Purchase Order No#
-              </label>
-              <input
-                type="text"
-                value={formData.pOrder}
-                onChange={(e) =>
-                  setFormData({ ...formData, pOrder: e.target.value })
-                }
-                className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-amber-600 outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block font-medium mb-1">Document Ref#</label>
-              <input
-                type="text"
-                value={formData.remarks}
-                onChange={(e) =>
-                  setFormData({ ...formData, remarks: e.target.value })
-                }
-                className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-amber-600 outline-none"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Product Details */}
-        <div className="bg-white p-6 shadow rounded-lg">
-          <h2 className="text-2xl font-extrabold bg-gradient-to-r from-amber-600 to-amber-900 bg-clip-text text-transparent mb-4">
-            Product Details
-          </h2>
-          {productRows.length === 0 ? (
-            <button
-              type="button"
-              onClick={addProductRow}
-              className="w-full py-2 bg-gradient-to-r from-amber-600 to-amber-900 text-white font-semibold rounded"
+          <Form.Item label="Select Party" required className="w-full">
+            <select
+              onChange={handlePartyChange}
+              value={formData.party?.id || ""}
+              className="w-full border rounded px-3 py-2"
             >
-              + Add Product
-            </button>
-          ) : (
-            <div className="space-y-4">
-              {productRows.map((row, index) => (
-                <div
-                  key={index}
-                  className="grid grid-cols-12 gap-2 items-start"
-                >
-                  {/* HS Code */}
-                  <div className="flex flex-col col-span-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      HS Code
-                    </label>
-                    <input
-                      type="number"
-                      value={row.hscode ?? ""}
-                      onChange={(e) =>
-                        updateProductRow(
-                          index,
-                          "hscode",
-                          Number(e.target.value)
-                        )
+              <option value="">Select Party</option>
+              {parties.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.partyName}
+                </option>
+              ))}
+            </select>
+          </Form.Item>
+
+          {/* Row 2 */}
+          <Form.Item label="Invoice No" className="w-full">
+            <Input
+              value={formData.invoiceNo}
+              readOnly
+              className="bg-gray-100"
+            />
+          </Form.Item>
+
+          <Form.Item label="Address" className="w-full">
+            <Input value={formData.address} readOnly className="bg-gray-100" />
+          </Form.Item>
+
+          {/* Row 3 */}
+          <Form.Item label="Seller NTN/CNIC" className="w-full">
+            <Input value={formData.ntn} readOnly className="bg-gray-100" />
+          </Form.Item>
+
+          <Form.Item label="Province" className="w-full">
+            <Input
+              value={formData.province.stateProvinceDesc}
+              readOnly
+              className="bg-gray-100"
+            />
+          </Form.Item>
+
+          {/* Row 4 */}
+          <Form.Item label="Purchase Order No#" className="w-full">
+            <Input
+              value={formData.pOrder}
+              onChange={(e) =>
+                setFormData({ ...formData, pOrder: e.target.value })
+              }
+            />
+          </Form.Item>
+
+          <Form.Item label="Document Ref#" className="w-full">
+            <Input
+              value={formData.remarks}
+              onChange={(e) =>
+                setFormData({ ...formData, remarks: e.target.value })
+              }
+            />
+          </Form.Item>
+        </div>
+      </Card>
+
+      {/* Product Details */}
+      <Card title="Product Details">
+        {productRows.length === 0 ? (
+          <Button onClick={addProductRow} className="w-full">
+            + Add Product
+          </Button>
+        ) : (
+          <>
+            {productRows.map((row, index) => (
+              <Row gutter={8} key={index} align="middle" className="mb-2">
+                {/* HS Code */}
+                <Col span={3}>
+                  <Form.Item label="HS Code">
+                    <Select<OptionType, false>
+                      options={hsOptions}
+                      value={
+                        row.hscode
+                          ? {
+                              value: String(row.hscode),
+                              label: String(row.hscode),
+                            }
+                          : null
                       }
-                      className="border rounded px-2 py-1"
-                    />
-                  </div>
-
-                  {/* Product */}
-                  <div className="flex flex-col col-span-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      Product
-                    </label>
-                    <select
-                      value={row.products?.id ?? 0}
-                      onChange={(e) => {
-                        const prod = products.find(
-                          (p) => p.id === Number(e.target.value)
+                      onChange={(selected: SingleValue<OptionType>) => {
+                        const found = hsCodes.find(
+                          (p) => p.hscode === selected?.value
                         );
-                        updateProductRow(index, "products", prod as products);
-                        updateProductRow(index, "units", prod?.units ?? "");
+                        if (found) {
+                          const updated = [...productRows];
+                          updated[index] = {
+                            ...updated[index],
+                            hscode: found.hscode,
+                            products: found,
+                            productId: found.id,
+                          };
+                          setProductRows(updated);
+                        }
                       }}
-                      className="border rounded px-2 py-1"
-                    >
-                      <option value={0}>Select</option>
-                      {products.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.productName}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Units */}
-                  <div className="flex flex-col col-span-1">
-                    <label className="text-sm font-medium text-gray-700">
-                      Units
-                    </label>
-                    <input
-                      type="text"
-                      value={row.units ?? ""}
-                      readOnly
-                      className="border rounded px-2 py-1 bg-gray-100"
+                      menuPortalTarget={document.body}
+                      styles={{
+                        menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                      }}
                     />
-                  </div>
+                  </Form.Item>
+                </Col>
 
-                  {/* Qty */}
-                  <div className="flex flex-col col-span-1">
-                    <label className="text-sm font-medium text-gray-700">
-                      Qty
-                    </label>
-                    <input
+                {/* Product Name */}
+                <Col span={4}>
+                  <Form.Item label="Product Name">
+                    <Input
+                      value={row.products?.productName ?? ""}
+                      readOnly
+                      className="bg-gray-100"
+                    />
+                  </Form.Item>
+                </Col>
+
+                {/* Units */}
+                <Col span={3}>
+                  <Form.Item label="Units">
+                    <Select<OptionType, false>
+                      options={uomOptions}
+                      value={
+                        row.units
+                          ? {
+                              value: row.units,
+                              label:
+                                uomList.find((u) => u.uom_code === row.units)
+                                  ?.description || row.units,
+                            }
+                          : null
+                      }
+                      onChange={(selected: SingleValue<OptionType>) =>
+                        updateProductRow(index, "units", selected?.value || "")
+                      }
+                      menuPortalTarget={document.body}
+                      styles={{
+                        menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                      }}
+                    />
+                  </Form.Item>
+                </Col>
+
+                {/* Qty, Price, ST%, Tax, ExTax, IncTax */}
+                <Col span={2}>
+                  <Form.Item label="Qty">
+                    <Input
                       type="number"
-                      value={row.quantity ?? ""}
+                      value={row.quantity}
                       onChange={(e) =>
                         updateProductRow(
                           index,
@@ -356,33 +327,25 @@ export default function Sales_Tax_Invoice() {
                           Number(e.target.value)
                         )
                       }
-                      className="border rounded px-2 py-1"
                     />
-                  </div>
-
-                  {/* Price */}
-                  <div className="flex flex-col col-span-1">
-                    <label className="text-sm font-medium text-gray-700">
-                      Price
-                    </label>
-                    <input
+                  </Form.Item>
+                </Col>
+                <Col span={2}>
+                  <Form.Item label="Price">
+                    <Input
                       type="number"
-                      value={row.price ?? ""}
+                      value={row.price}
                       onChange={(e) =>
                         updateProductRow(index, "price", Number(e.target.value))
                       }
-                      className="border rounded px-2 py-1"
                     />
-                  </div>
-
-                  {/* S.T% */}
-                  <div className="flex flex-col col-span-1">
-                    <label className="text-sm font-medium text-gray-700">
-                      S.T%
-                    </label>
-                    <input
+                  </Form.Item>
+                </Col>
+                <Col span={2}>
+                  <Form.Item label="S.T %">
+                    <Input
                       type="number"
-                      value={row.stPercent ?? ""}
+                      value={row.stPercent}
                       onChange={(e) =>
                         updateProductRow(
                           index,
@@ -390,123 +353,71 @@ export default function Sales_Tax_Invoice() {
                           Number(e.target.value)
                         )
                       }
-                      className="border rounded px-2 py-1"
                     />
-                  </div>
+                  </Form.Item>
+                </Col>
+                <Col span={2}>
+                  <Form.Item label="Tax">
+                    <Input
+                      value={row.taxValue}
+                      readOnly
+                      className="bg-gray-100"
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={2}>
+                  <Form.Item label="Ex Tax">
+                    <Input
+                      value={row.valueExTax}
+                      readOnly
+                      className="bg-gray-100"
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={2}>
+                  <Form.Item label="Inc Tax">
+                    <Input
+                      value={row.valueIncTax}
+                      readOnly
+                      className="bg-gray-100"
+                    />
+                  </Form.Item>
+                </Col>
 
-                  {/* Tax, Ex-Tax, Inc-Tax */}
-                  {/* Tax, Ex-Tax, Inc-Tax */}
-                  <div className="flex flex-col col-span-3 space-y-1">
-                    <div className="flex flex-col">
-                      <label className="text-sm font-medium text-gray-700">
-                        Tax
-                      </label>
-                      <input
-                        type="number"
-                        value={row.taxValue ?? 0}
-                        readOnly
-                        className="border rounded px-2 py-1 bg-gray-100"
-                      />
-                    </div>
+                {/* Delete */}
+                <Col span={2}>
+                  <Button onClick={() => removeProductRow(index)}>DLT</Button>
+                </Col>
+              </Row>
+            ))}
 
-                    <div className="flex flex-col">
-                      <label className="text-sm font-medium text-gray-700">
-                        Ex-Tax
-                      </label>
-                      <input
-                        type="number"
-                        value={row.valueExTax ?? 0}
-                        readOnly
-                        className="border rounded px-2 py-1 bg-gray-100"
-                      />
-                    </div>
+            <Button onClick={addProductRow} className="w-full mt-2">
+              + Add Product
+            </Button>
+          </>
+        )}
+      </Card>
 
-                    <div className="flex flex-col">
-                      <label className="text-sm font-medium text-gray-700">
-                        Inc-Tax
-                      </label>
-                      <input
-                        type="number"
-                        value={row.valueIncTax ?? 0}
-                        readOnly
-                        className="border rounded px-2 py-1 bg-gray-100"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Delete */}
-                  <div className="flex flex-col justify-end col-span-1">
-                    <button
-                      type="button"
-                      onClick={() => removeProductRow(index)}
-                      className="bg-red-500 text-white font-bold px-2 py-1 rounded hover:bg-red-600"
-                    >
-                      DLT
-                    </button>
-                  </div>
-                </div>
-              ))}
-
-              <button
-                type="button"
-                onClick={addProductRow}
-                className="w-full py-2 bg-gradient-to-r from-amber-600 to-amber-900 text-white font-semibold rounded"
-              >
-                + Add Product
-              </button>
-            </div>
-          )}
+      {/* Totals */}
+      <Card title="Totals">
+        <div className="grid grid-cols-4 gap-4">
+          <Form.Item label="Total Qty">
+            <Input className="bg-gray-100" value={totalQuantity} readOnly />
+          </Form.Item>
+          <Form.Item label="Total Tax">
+            <Input className="bg-gray-100" value={totalTax} readOnly />
+          </Form.Item>
+          <Form.Item label="Value Ex Tax">
+            <Input className="bg-gray-100" value={totalExTax} readOnly />
+          </Form.Item>
+          <Form.Item label="Value Inc Tax">
+            <Input className="bg-gray-100" value={totalIncTax} readOnly />
+          </Form.Item>
         </div>
-
-        {/* Totals */}
-        <div className="bg-white p-6 shadow rounded-lg">
-          <h2 className="text-2xl font-extrabold bg-gradient-to-r from-amber-600 to-amber-900 bg-clip-text text-transparent mb-4">
-            Totals
-          </h2>
-          <div className="grid grid-cols-4 gap-6">
-            <div>
-              <label>Total Quantity</label>
-              <input
-                type="number"
-                value={totalQuantity}
-                readOnly
-                className="w-full border rounded px-3 py-2 bg-gray-100"
-              />
-            </div>
-            <div>
-              <label>Total Tax</label>
-              <input
-                type="number"
-                value={totalTax}
-                readOnly
-                className="w-full border rounded px-3 py-2 bg-gray-100"
-              />
-            </div>
-            <div>
-              <label>Value Ex-Tax</label>
-              <input
-                type="number"
-                value={totalExTax}
-                readOnly
-                className="w-full border rounded px-3 py-2 bg-gray-100"
-              />
-            </div>
-            <div>
-              <label>Value Inc-Tax</label>
-              <input
-                type="number"
-                value={totalIncTax}
-                readOnly
-                className="w-full border rounded px-3 py-2 bg-gray-100"
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end mt-6">
-            <Button>Submit Invoice</Button>
-          </div>
+        <div className="flex justify-end mt-4">
+          <Button>Submit Invoice</Button>
         </div>
-      </form>
-    </div>
+      </Card>
+    </Form>
   );
 }

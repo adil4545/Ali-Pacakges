@@ -1,37 +1,24 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { FaUpload, FaUserCircle } from "react-icons/fa";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { Link } from "react-router-dom";
+import { Form, Input, Select, Button, Card, Row, Col, message } from "antd";
 import type { Province, UserProfile } from "../../Types/Profile";
-import Button from "../UI/Button";
-import { useGetProvinceQuery } from "../../api/usersApi";
-
-// ✅ Province ka interface API ke response ke hisaab se
+import { _province } from "../../Utilities/SelectProvince";
 
 export default function Profile() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // ✅ Provinces API se fetch
-  const { data: provinces, isLoading, isError } = useGetProvinceQuery();
-
-  // ✅ Debugging ke liye API ka data dekhna
-  useEffect(() => {
-    if (provinces) {
-      console.log("Provinces from API:", provinces);
-    }
-  }, [provinces]);
-
-  // ✅ Default User Data
   const userData: UserProfile = {
-    firstName: "Ali",
-    lastName: "Khan",
+    first_name: "Ali",
+    last_name: "Khan",
     email: "ali.khan@example.com",
     phone: "923222222222222",
     role: "Admin",
     status: "Active",
     gender: "Male",
-    businessName: "ALI Packages",
+    sellerBusinessName: "ALI Packages",
     ntn: "123456789",
     address: "Lahore, Pakistan",
     profilePic: "",
@@ -39,7 +26,6 @@ export default function Profile() {
 
   const [formData, setFormData] = useState<UserProfile>(userData);
 
-  // ✅ Handle profile picture upload
   const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -48,30 +34,43 @@ export default function Profile() {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleSubmit = (values: any) => {
+    console.log("Updated Profile Data:", { ...formData, ...values });
+    message.success("Profile updated successfully!");
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 p-2">
-      <div className="bg-white w-full p-8 shadow rounded-lg">
-        {/* Profile Picture */}
-        <div className="flex flex-col items-center mb-12">
+    <div className="min-h-screen bg-gray-50 m-1 p-2 flex justify-center">
+      <Card
+        title={
+          <h1 className="text-2xl font-extrabold bg-gradient-to-r from-amber-600 to-amber-900 bg-clip-text text-transparent">
+            User Profile
+          </h1>
+        }
+        className="w-full max-w-[95rem] shadow-xl rounded-2xl border border-gray-200"
+      >
+        {/* Profile Picture Section */}
+        <div className="flex flex-col items-center mb-10">
           {formData.profilePic ? (
             <img
               src={formData.profilePic}
               alt="Profile"
-              className="w-28 h-28 rounded-full object-cover border-4 border-amber-600 shadow"
+              className="w-32 h-32 rounded-full object-cover border-4 border-amber-600 shadow-md"
             />
           ) : (
-            <FaUserCircle className="w-28 h-28 text-gray-400" />
+            <FaUserCircle className="w-32 h-32 text-gray-400" />
           )}
 
-          <div className="mt-6">
-            <Button
-              onClick={() => fileInputRef.current?.click()}
-              className="mt-2 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-900 text-white rounded-lg shadow hover:opacity-90 transition"
-            >
-              <FaUpload /> Update Profile Picture
-            </Button>
-          </div>
-          {/* Hidden file input */}
+          <Button
+            type="primary"
+            onClick={() => fileInputRef.current?.click()}
+            className="mt-4 flex items-center gap-2 bg-gradient-to-r from-amber-600 to-amber-900 text-white"
+            icon={<FaUpload />}
+          >
+            Update Profile Picture
+          </Button>
+
           <input
             type="file"
             accept="image/*"
@@ -81,210 +80,167 @@ export default function Profile() {
           />
         </div>
 
-        {/* Form */}
-        <form className="space-y-6">
-          {/* Row 1 */}
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <label className="block font-medium mb-1">
-                <span className="text-red-600">*</span> First Name
-              </label>
-              <input
-                type="text"
-                value={formData.firstName}
-                onChange={(e) =>
-                  setFormData({ ...formData, firstName: e.target.value })
-                }
-                className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-amber-600 outline-none"
-              />
-            </div>
-            <div>
-              <label className="block font-medium mb-1">
-                <span className="text-red-600">*</span> Last Name
-              </label>
-              <input
-                type="text"
-                value={formData.lastName}
-                onChange={(e) =>
-                  setFormData({ ...formData, lastName: e.target.value })
-                }
-                className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-amber-600 outline-none"
-              />
-            </div>
-          </div>
-
-          {/* Row 2 */}
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <label className="block font-medium mb-1">
-                <span className="text-red-600">*</span> Email
-              </label>
-              <input
-                type="email"
-                value={formData.email}
-                disabled
-                className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-amber-600 outline-none"
-              />
-            </div>
-            <div>
-              <label className="block font-medium mb-1">
-                <span className="text-red-600">*</span> Phone Number
-              </label>
-              <PhoneInput
-                country={"pk"}
-                value={formData.phone?.toString()}
-                onChange={(phone: string | number) =>
-                  setFormData({ ...formData, phone })
-                }
-                inputClass="!w-full !h-10 !text-base !pl-12 border rounded focus:ring-2 focus:ring-amber-600 outline-none"
-                buttonClass="!border !border-gray-300"
-                dropdownClass="!bg-white !shadow-lg"
-                enableSearch={true}
-              />
-            </div>
-          </div>
-
-          {/* Row 3 */}
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <label className="block font-medium mb-1">
-                <span className="text-red-600">*</span> Role
-              </label>
-              <input
-                type="text"
-                value={formData.role}
-                disabled
-                className="w-full border rounded px-3 py-2 bg-gray-100"
-              />
-            </div>
-            <div>
-              <label className="block font-medium mb-1">
-                <span className="text-red-600">*</span> Status
-              </label>
-              <input
-                type="text"
-                value={formData.status}
-                disabled
-                className="w-full border rounded px-3 py-2 bg-gray-100"
-              />
-            </div>
-          </div>
-
-          {/* Row 4 */}
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <label className="block font-medium mb-1">
-                <span className="text-red-600">*</span> Gender
-              </label>
-              <select
-                value={formData.gender}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    gender: e.target.value as UserProfile["gender"],
-                  })
-                }
-                className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-amber-600 outline-none"
+        {/* Profile Form */}
+        <Form
+          layout="vertical"
+          initialValues={formData}
+          onFinish={handleSubmit}
+          className="space-y-4"
+        >
+          <Row gutter={[32, 24]}>
+            {/* First / Last Name */}
+            <Col xs={24} md={12}>
+              <Form.Item
+                label="First Name"
+                name="first_name"
+                rules={[{ required: true, message: "First Name is required" }]}
               >
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Transgender">Transgender</option>
-              </select>
-            </div>
-            <div>
-              <label className="block font-medium mb-1">
-                <span className="text-red-600">*</span> Seller Business Name
-              </label>
-              <input
-                type="text"
-                value={formData.businessName}
-                onChange={(e) =>
-                  setFormData({ ...formData, businessName: e.target.value })
-                }
-                className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-amber-600 outline-none"
-              />
-            </div>
-          </div>
+                <Input size="large" placeholder="Enter first name" />
+              </Form.Item>
+            </Col>
 
-          {/* Row 5 */}
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <label className="block font-medium mb-1">
-                <span className="text-red-600">*</span> Seller NTN/CNIC
-              </label>
-              <input
-                type="text"
-                value={formData.ntn}
-                onChange={(e) =>
-                  setFormData({ ...formData, ntn: e.target.value })
-                }
-                className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-amber-600 outline-none"
-              />
-            </div>
-            <div>
-              <label className="block font-medium mb-1">
-                <span className="text-red-600">*</span> Seller Province
-              </label>
-              <select
-                value={formData.province?.stateProvinceDesc || ""}
-                onChange={(e) => {
-                  const selected = provinces?.find(
-                    (prov) => prov.stateProvinceDesc === e.target.value
-                  );
-                  if (selected) {
-                    setFormData({ ...formData, province: selected });
-                  }
-                }}
-                className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-amber-600 outline-none"
+            <Col xs={24} md={12}>
+              <Form.Item
+                label="Last Name"
+                name="last_name"
+                rules={[{ required: true, message: "Last Name is required" }]}
               >
-                <option value="">Select Province</option>
-                {isLoading && <option>Loading...</option>}
-                {isError && <option>Error loading provinces</option>}
-                {provinces &&
-                  provinces.map((prov: Province) => (
-                    <option
+                <Input size="large" placeholder="Enter last name" />
+              </Form.Item>
+            </Col>
+
+            {/* Email / Phone */}
+            <Col xs={24} md={12}>
+              <Form.Item label="Email" name="email">
+                <Input size="large" disabled />
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} md={12}>
+              <Form.Item
+                label="Phone Number"
+                name="phone"
+                rules={[{ required: true, message: "Phone is required" }]}
+              >
+                <PhoneInput
+                  country={"pk"}
+                  value={formData.phone?.toString()}
+                  onChange={(phone) => setFormData({ ...formData, phone })}
+                  inputClass="!w-full !h-[45px] !text-base !pl-12 border rounded focus:ring-2 focus:ring-amber-600 outline-none"
+                  buttonClass="!border !border-gray-300"
+                  dropdownClass="!bg-white !shadow-lg"
+                  enableSearch
+                />
+              </Form.Item>
+            </Col>
+
+            {/* Role / Status */}
+            <Col xs={24} md={12}>
+              <Form.Item label="Role" name="role">
+                <Input size="large" disabled />
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} md={12}>
+              <Form.Item label="Status" name="status">
+                <Input size="large" disabled />
+              </Form.Item>
+            </Col>
+
+            {/* Gender / Business */}
+            <Col xs={24} md={12}>
+              <Form.Item
+                label="Gender"
+                name="gender"
+                rules={[{ required: true, message: "Gender is required" }]}
+              >
+                <Select size="large" placeholder="Select Gender">
+                  <Select.Option value="Male">Male</Select.Option>
+                  <Select.Option value="Female">Female</Select.Option>
+                  <Select.Option value="Transgender">Transgender</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} md={12}>
+              <Form.Item
+                label="Seller Business Name"
+                name="sellerBusinessName"
+                rules={[
+                  { required: true, message: "Business name is required" },
+                ]}
+              >
+                <Input size="large" placeholder="Enter business name" />
+              </Form.Item>
+            </Col>
+
+            {/* NTN / Province */}
+            <Col xs={24} md={12}>
+              <Form.Item
+                label="Seller NTN/CNIC"
+                name="ntn"
+                rules={[{ required: true, message: "NTN/CNIC is required" }]}
+              >
+                <Input size="large" placeholder="Enter NTN or CNIC" />
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} md={12}>
+              <Form.Item
+                label="Seller Province"
+                name={["province", "stateProvinceDesc"]}
+                rules={[{ required: true, message: "Province is required" }]}
+              >
+                <Select size="large" placeholder="Select Province">
+                  {_province.map((prov: Province) => (
+                    <Select.Option
                       key={prov.stateProvinceCode}
                       value={prov.stateProvinceDesc}
                     >
                       {prov.stateProvinceDesc}
-                    </option>
+                    </Select.Option>
                   ))}
-              </select>
-            </div>
-          </div>
+                </Select>
+              </Form.Item>
+            </Col>
 
-          {/* Address */}
-          <div>
-            <label className="block font-medium mb-1">
-              <span className="text-red-600">*</span> Address
-            </label>
-            <textarea
-              value={formData.address}
-              onChange={(e) =>
-                setFormData({ ...formData, address: e.target.value })
-              }
-              rows={4}
-              className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-amber-600 outline-none"
-            ></textarea>
-          </div>
+            {/* Address */}
+            <Col xs={24}>
+              <Form.Item
+                label="Address"
+                name="address"
+                rules={[{ required: true, message: "Address is required" }]}
+              >
+                <Input.TextArea
+                  rows={4}
+                  placeholder="Enter full address"
+                  className="text-base"
+                />
+              </Form.Item>
+            </Col>
+          </Row>
 
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-4">
-            <Link
-              to="/admin/dashboard"
-              className="px-6 py-2 rounded-lg bg-gradient-to-r from-amber-600 to-amber-900 text-white shadow hover:opacity-90"
-            >
-              Cancel
+          {/* Buttons */}
+          <div className="flex justify-end gap-4 pt-6">
+            <Link to="/admin/dashboard">
+              <Button
+                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium"
+                size="large"
+              >
+                Cancel
+              </Button>
             </Link>
-            <button
-              type="submit"
-              className="px-6 py-2 rounded-lg bg-gradient-to-r from-amber-600 to-amber-900 text-white shadow hover:opacity-90"
+            <Button
+              type="primary"
+              htmlType="submit"
+              className="bg-gradient-to-r from-amber-600 to-amber-900 text-white font-semibold"
+              size="large"
             >
               Update Profile
-            </button>
+            </Button>
           </div>
-        </form>
-      </div>
+        </Form>
+      </Card>
     </div>
   );
 }

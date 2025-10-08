@@ -31,8 +31,8 @@ function Navbar({
   userName?: string;
   profilePic?: string;
 }) {
-  const [openMenu1, setOpenMenu1] = useState(false); // desktop tax reports
-  const [openMenu2, setOpenMenu2] = useState(false); // desktop reports
+  const [openMenu1, setOpenMenu1] = useState(false);
+  const [openMenu2, setOpenMenu2] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileOpenMenu1, setMobileOpenMenu1] = useState(false);
   const [mobileOpenMenu2, setMobileOpenMenu2] = useState(false);
@@ -77,7 +77,6 @@ function Navbar({
   return (
     <div className="w-full bg-gradient-to-r from-amber-600 to-amber-900 text-white shadow-lg">
       <nav className="w-full h-[10vh] flex flex-wrap items-center justify-between px-6">
-        {/* Logo */}
         <div className="flex items-center gap-4">
           <Link to="dashboard" className="flex items-center gap-2">
             <img
@@ -89,7 +88,6 @@ function Navbar({
           </Link>
         </div>
 
-        {/* Desktop Nav Links */}
         <ul className="hidden lg:flex items-center gap-8 text-lg font-medium">
           <li>
             <Link
@@ -117,9 +115,7 @@ function Navbar({
           </li>
         </ul>
 
-        {/* Right Side */}
         <div className="flex items-center gap-4 ml-auto flex-shrink-0">
-          {/* Mobile Menu Button */}
           <button
             className="lg:hidden text-2xl"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -127,9 +123,7 @@ function Navbar({
             {mobileMenuOpen ? <FaTimes /> : <FaBars />}
           </button>
 
-          {/* Desktop Dropdowns + Profile */}
           <div className="hidden lg:flex items-center gap-3">
-            {/* Tax Reports */}
             <div className="relative" ref={menu1Ref}>
               <button
                 onClick={() => setOpenMenu1(!openMenu1)}
@@ -171,7 +165,6 @@ function Navbar({
               )}
             </div>
 
-            {/* Reports */}
             <div className="relative" ref={menu2Ref}>
               <button
                 onClick={() => setOpenMenu2(!openMenu2)}
@@ -221,7 +214,6 @@ function Navbar({
               )}
             </div>
 
-            {/* Profile Dropdown */}
             <div className="relative flex-shrink-0" ref={profileRef}>
               <div
                 onClick={() => setOpenProfile(!openProfile)}
@@ -278,7 +270,6 @@ function Navbar({
         </div>
       </nav>
 
-      {/* Mobile/Tablet Menu */}
       {mobileMenuOpen && (
         <div className="lg:hidden bg-amber-700 text-white px-6 py-4 space-y-3">
           <Link
@@ -303,7 +294,6 @@ function Navbar({
             <FaUsers /> Parties
           </Link>
 
-          {/* Tax Reports */}
           <div className="space-y-1">
             <button
               className="flex items-center gap-2 w-full"
@@ -338,7 +328,6 @@ function Navbar({
             )}
           </div>
 
-          {/* Reports */}
           <div className="space-y-1">
             <button
               className="flex items-center gap-2 w-full"
@@ -380,7 +369,6 @@ function Navbar({
             )}
           </div>
 
-          {/* Mobile Profile Section */}
           <div className="border-t border-white/50 pt-4 space-y-2">
             <div className="flex items-center gap-3">
               <Avatar
@@ -425,7 +413,6 @@ function Navbar({
         <span className="font-bold">{currentPage}</span>
       </div>
 
-      {/* Modals */}
       {showChangePassword && (
         <ChangePasswordModal
           visible={showChangePassword}

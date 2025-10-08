@@ -1,6 +1,6 @@
 import { api } from "../slice/authapislice";
 import type { UserProfile } from "../Types/Profile";
-//import type {Province } from "../Components/Setting/Profile";
+
 import type { Province } from "../Types/Profile";
 
 export const usersApi = api.injectEndpoints({
