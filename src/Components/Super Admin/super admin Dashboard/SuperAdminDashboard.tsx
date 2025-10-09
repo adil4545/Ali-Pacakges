@@ -1,4 +1,4 @@
-import { motion } from "framer-motion"
+import { motion } from "framer-motion";
 import {
   BarChart,
   Bar,
@@ -9,25 +9,49 @@ import {
   Pie,
   Cell,
   ResponsiveContainer,
-} from "recharts"
+} from "recharts";
+import { useGetAllAdminsQuery } from "../../../api/SuperAdminapi";
+import type { UserProfile } from "../../../Types/Profile";
 
-const data = [{ name: "Admins", value: 3 }]
-const COLORS = ["#f59e0b"]
+const COLORS = ["#f59e0b", "#fcd34d"];
 
 export default function Dashboard() {
+  const { data, isLoading, isFetching } = useGetAllAdminsQuery();
+  const admins: UserProfile[] = data?.data ?? [];
+
+  const totalAdmins = admins.length;
+  const maleCount = admins.filter(
+    (a) => a.gender?.toLowerCase() === "male"
+  ).length;
+  const femaleCount = admins.filter(
+    (a) => a.gender?.toLowerCase() === "female"
+  ).length;
+
+  const barData = [{ name: "Admins", value: totalAdmins }];
+  const pieData = [
+    { name: "Male", value: maleCount },
+    { name: "Female", value: femaleCount },
+  ];
+
+  if (isLoading || isFetching) {
+    return (
+      <div className="flex items-center justify-center h-64 text-amber-700 font-semibold">
+        Loading dashboard...
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Title */}
       <motion.h2
         className="text-2xl font-extrabold bg-gradient-to-r from-amber-600 to-amber-900 bg-clip-text text-transparent mb-4"
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.6 }}
       >
-         Super Admin Dashboard
+        Super Admin Dashboard
       </motion.h2>
 
-      {/* Charts Section (Single Container) */}
       <motion.div
         className="bg-gradient-to-r from-white to-amber-50 rounded-2xl shadow-lg p-6 border h-[550px]"
         initial={{ opacity: 0, y: 30 }}
@@ -42,12 +66,12 @@ export default function Dashboard() {
             </h3>
             <div className="flex-1">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data}>
+                <BarChart data={barData}>
                   <XAxis dataKey="name" />
                   <YAxis allowDecimals={false} />
                   <Tooltip />
                   <Bar dataKey="value" fill="#3b82f6" radius={[10, 10, 0, 0]}>
-                    {data.map((_entry, index) => (
+                    {barData.map((_entry, index) => (
                       <Cell key={`cell-${index}`} />
                     ))}
                   </Bar>
@@ -65,7 +89,7 @@ export default function Dashboard() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={data}
+                    data={pieData}
                     dataKey="value"
                     nameKey="name"
                     cx="50%"
@@ -74,7 +98,7 @@ export default function Dashboard() {
                     fill="#f59e0b"
                     label
                   >
-                    {data.map((_entry, index) => (
+                    {pieData.map((_entry, index) => (
                       <Cell
                         key={`cell-${index}`}
                         fill={COLORS[index % COLORS.length]}
@@ -89,5 +113,5 @@ export default function Dashboard() {
         </div>
       </motion.div>
     </div>
-  )
+  );
 }

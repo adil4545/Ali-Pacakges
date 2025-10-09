@@ -3,12 +3,12 @@ export interface HSCodeProduct {
   description: string;
 }
 export interface products {
-  id?: number;
-  hscode?: string;
-  productName?: string;
+  id?: string;
+  hs_code: string;
+  fbr_product?: string;
   units?: string;
-  uom?: string;
-  salePrice?: string;
+  product_uom?: string;
+  sale_price?: string;
   otherType?: string;
   tax?: string;
 }

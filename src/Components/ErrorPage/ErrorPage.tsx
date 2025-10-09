@@ -18,7 +18,7 @@ export default function ErrorPage() {
       </p>
 
       <div className="items-center justify-center mt-4">
-        <Button onClick={() => navigate("/")}>Back Home</Button>
+        <Button onClick={() => navigate(-1)}>Back Home</Button>
       </div>
     </div>
   );

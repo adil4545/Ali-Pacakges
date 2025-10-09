@@ -3,95 +3,73 @@ import { FaRegEdit, FaRegTrashAlt, FaSearch, FaBoxOpen } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { MdNavigateBefore, MdNavigateNext } from "react-icons/md";
+import { message } from "antd";
 import Button from "../../Components/UI/Button";
+import {
+  useGetAllPartiesQuery,
+  useDeletePartyMutation,
+} from "../../api/Partyapi";
+import type { Party } from "../../Types/Party";
 
 export default function Parties() {
   const navigate = useNavigate();
 
-  const [data, setData] = useState([
-    {
-      id: 1,
-      ntn: "1234567",
-      partyType: "Supplier",
-      PartyName: "ABC Traders",
-      registrationType: "FBR Registered",
-      province: "Punjab",
-    },
-    {
-      id: 2,
-      ntn: "9876543",
-      partyType: "Customer",
-      PartyName: "XYZ Enterprises",
-      registrationType: "Non-Registered",
-      province: "Sindh",
-    },
-    {
-      id: 3,
-      ntn: "4567890",
-      partyType: "Customer",
-      PartyName: "Al-Noor Pvt Ltd",
-      registrationType: "FBR Registered",
-      province: "KPK",
-    },
-    {
-      id: 4,
-      ntn: "1112223",
-      partyType: "Supplier",
-      PartyName: "Metro Pvt Ltd",
-      registrationType: "FBR Registered",
-      province: "Punjab",
-    },
-    {
-      id: 5,
-      ntn: "2223334",
-      partyType: "Customer",
-      PartyName: "Super Mart",
-      registrationType: "Non-Registered",
-      province: "Sindh",
-    },
-    {
-      id: 6,
-      ntn: "3334445",
-      partyType: "Supplier",
-      PartyName: "Prime Supplies",
-      registrationType: "FBR Registered",
-      province: "KPK",
-    },
-    {
-      id: 7,
-      ntn: "4445556",
-      partyType: "Customer",
-      PartyName: "Oceanic Traders",
-      registrationType: "Non-Registered",
-      province: "Balochistan",
-    },
-  ]);
+  // 🔹 Fetch all parties
+  const { data, isLoading, isError, refetch } = useGetAllPartiesQuery();
+
+  // 🔹 Delete party mutation
+  const [deleteParty] = useDeletePartyMutation();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const entriesPerPage = 5;
 
-  // delete function
-  const handleDelete = (id: number) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this party?"
-    );
-    if (confirmDelete) {
-      setData(data.filter((item) => item.id !== id));
+  // ✅ Delete handler
+  const handleDelete = async (id: string | number) => {
+    try {
+      const confirm = window.confirm(
+        "Are you sure you want to delete this party?"
+      );
+      if (!confirm) return;
+
+      const response = await deleteParty(String(id)).unwrap();
+      message.success(response?.message || "Party deleted successfully!");
+      refetch(); // refresh list
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      message.error(error?.data?.message || "Failed to delete party!");
     }
   };
 
-  // search filter
-  const filteredData =
-    searchTerm.trim() === ""
-      ? data
-      : data.filter(
-          (item) =>
-            item.ntn.includes(searchTerm.trim()) ||
-            item.PartyName.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+  // ✅ Handle loading / error states
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64 text-amber-700 font-semibold">
+        Loading Parties...
+      </div>
+    );
+  }
 
-  // pagination logic
+  if (isError || !data?.data?.length) {
+    return (
+      <div className="flex flex-col justify-center items-center h-64 text-gray-500">
+        <FaBoxOpen size={40} className="mb-2 text-gray-400 animate-pulse" />
+        No parties found
+        <Button onClick={() => navigate("../add-party")} className="mt-4">
+          Add New Party
+        </Button>
+      </div>
+    );
+  }
+
+  // ✅ Filter by search
+  const filteredData = data.data.filter(
+    (item: Party) =>
+      item.ntn?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.party_name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // ✅ Pagination logic
   const totalPages = Math.ceil(filteredData.length / entriesPerPage);
   const indexOfLast = currentPage * entriesPerPage;
   const indexOfFirst = indexOfLast - entriesPerPage;
@@ -103,7 +81,7 @@ export default function Parties() {
 
   return (
     <div className="mx-2 my-2 mb-4 bg-gray-50 rounded-lg shadow-md p-6 flex flex-col">
-      {/* Top Section */}
+      {/* Header Section */}
       <div className="flex items-center justify-between px-4 mb-10">
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
@@ -124,11 +102,11 @@ export default function Parties() {
           >
             <input
               type="text"
-              placeholder="Search by NTN or Party..."
+              placeholder="Search by NTN or Party Name..."
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
-                setCurrentPage(1); // reset page on search
+                setCurrentPage(1);
               }}
               className="pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-700"
             />
@@ -147,7 +125,7 @@ export default function Parties() {
         <table className="w-full border-collapse bg-white rounded-md shadow-sm">
           <thead>
             <tr className="bg-gray-200 text-gray-800">
-              <th className="p-3 text-left">#Serial</th>
+              <th className="p-3 text-left">#</th>
               <th className="p-3 text-left">NTN</th>
               <th className="p-3 text-left">Party Type</th>
               <th className="p-3 text-left">Party Name</th>
@@ -157,62 +135,46 @@ export default function Parties() {
             </tr>
           </thead>
           <tbody>
-            {currentData.length > 0 ? (
-              currentData.map((item, index) => (
-                <motion.tr
-                  key={item.id}
-                  className="border-b hover:bg-gray-50"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1, duration: 0.3 }}
-                >
-                  <td className="p-3">{indexOfFirst + index + 1}</td>
-                  <td className="p-3">{item.ntn}</td>
-                  <td className="p-3">{item.partyType}</td>
-                  <td className="p-3">{item.PartyName}</td>
-                  <td className="p-3">{item.registrationType}</td>
-                  <td className="p-3">{item.province}</td>
-                  <td className="p-3 flex gap-4">
-                    {/* Edit Button */}
-                    <motion.button
-                      whileHover={{ scale: 1.2 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => navigate(`/admin/edit-party/${item.id}`)}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      <FaRegEdit size={20} />
-                    </motion.button>
+            {currentData.map((item: Party, index: number) => (
+              <motion.tr
+                key={item.id}
+                className="border-b hover:bg-gray-50"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05, duration: 0.3 }}
+              >
+                <td className="p-3">{indexOfFirst + index + 1}</td>
+                <td className="p-3">{item.ntn}</td>
+                <td className="p-3">{String(item.party_type)}</td>
+                <td className="p-3">{item.party_name}</td>
+                <td className="p-3">{item.registration_type}</td>
+                <td className="p-3">{String(item.province)}</td>
+                <td className="p-3 flex gap-4">
+                  <motion.button
+                    whileHover={{ scale: 1.2 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => navigate(`/admin/edit-party/${item.id}`)}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    <FaRegEdit size={20} />
+                  </motion.button>
 
-                    {/* Delete Button */}
-                    <motion.button
-                      whileHover={{ rotate: [0, -10, 10, -10, 0] }}
-                      transition={{ duration: 0.5 }}
-                      onClick={() => handleDelete(item.id)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      <FaRegTrashAlt size={20} />
-                    </motion.button>
-                  </td>
-                </motion.tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={7} className="py-10">
-                  <div className="flex flex-col items-center text-gray-500">
-                    <FaBoxOpen
-                      size={40}
-                      className="mb-2 text-gray-400 animate-pulse"
-                    />
-                    No parties found
-                  </div>
+                  <motion.button
+                    whileHover={{ rotate: [0, -10, 10, -10, 0] }}
+                    transition={{ duration: 0.5 }}
+                    onClick={() => handleDelete(item.id!)}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    <FaRegTrashAlt size={20} />
+                  </motion.button>
                 </td>
-              </tr>
-            )}
+              </motion.tr>
+            ))}
           </tbody>
         </table>
       </div>
 
-      {/* Pagination Controls */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex justify-end mt-6 pr-2">
           <div className="flex items-center gap-2">

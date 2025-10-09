@@ -1,4 +1,7 @@
-import type { Province } from "./Profile";
+export interface Province {
+  stateProvinceCode: number;
+  stateProvinceDesc: string;
+}
 
 export interface PartyType {
   partyType: string;
@@ -8,12 +11,12 @@ export interface PartyType {
 export interface Party {
   id?: number;
   ntn: string;
-  partyName: string;
-  partyType?: PartyType;
+  party_name: string;
+  party_type?: PartyType | string;
   phone?: string;
   cnic?: string;
   strn?: string;
-  registrationNo?: string;
+  registration_type?: "Registered" | "unregistered" | "Unregistered";
   province: Province;
   address: string;
 }

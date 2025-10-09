@@ -8,13 +8,13 @@ export interface ProfileResponse {
 export const profileApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getMyProfile: builder.query<ProfileResponse, void>({
-      query: () => "/me",
+      query: () => "/auth/me",
       providesTags: ["UserProfile"],
     }),
 
     updateMyProfile: builder.mutation<UserProfile, Partial<UserProfile>>({
       query: (updatedData) => ({
-        url: "/me",
+        url: "/auth/me",
         method: "PUT",
         body: updatedData,
       }),

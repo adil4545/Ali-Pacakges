@@ -37,7 +37,7 @@ export default function Profile() {
         status: getUserData.status,
         sellerNTNCNIC: getUserData.sellerNTNCNIC,
         sellerBusinessName: getUserData.sellerBusinessName,
-        sellerProvince: getUserData.sellerProvince,
+        province: getUserData.province,
         sellerAddress: getUserData.sellerAddress,
       });
       setProfilePic(getUserData.profile_image || "");
@@ -219,7 +219,7 @@ export default function Profile() {
             <Col xs={24} md={12}>
               <Form.Item
                 label="Seller Province"
-                name="sellerProvince"
+                name="province"
                 rules={[{ required: true }]}
               >
                 <Select size="large" placeholder="Select Province">

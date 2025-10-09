@@ -1,18 +1,42 @@
 import { useState, useRef, useEffect } from "react";
 import { MdDashboard } from "react-icons/md";
 import { FaUsers, FaUserCircle, FaSignOutAlt } from "react-icons/fa";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Avatar } from "antd";
+import { useGetMyProfileQuery } from "../../../api/Profile";
 
-interface NavbarProps {
-  userName?: string;
-  profilePic?: string;
-}
-
-function NavBar({ userName = "John Doe", profilePic }: NavbarProps) {
+function NavBar() {
   const [openProfile, setOpenProfile] = useState(false);
+  const [userName, setUserName] = useState("User");
+  const [profilePic, setProfilePic] = useState("");
   const profileRef = useRef<HTMLDivElement | null>(null);
+
+  const { data: userData } = useGetMyProfileQuery(); // ✅ fetch user data
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // ✅ Capitalize helper
+  const capitalize = (str?: string) =>
+    str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "";
+
+  // ✅ Update user info from API
+  useEffect(() => {
+    if (userData?.data) {
+      const { first_name, last_name, profile_image } = userData.data;
+
+      const fullName = `${capitalize(first_name)} ${capitalize(
+        last_name
+      )}`.trim();
+      setUserName(fullName || "User");
+
+      const imageUrl = profile_image
+        ? profile_image.startsWith("http")
+          ? profile_image
+          : `${import.meta.env.VITE_API_URL || ""}${profile_image}`
+        : "";
+      setProfilePic(imageUrl);
+    }
+  }, [userData]);
 
   // ✅ Close dropdown on outside click
   useEffect(() => {
@@ -26,7 +50,7 @@ function NavBar({ userName = "John Doe", profilePic }: NavbarProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ✅ Current page title (from URL)
+  // ✅ Current page title
   const currentPageRaw =
     location.pathname.split("/").filter(Boolean).pop() || "Dashboard";
 
@@ -36,17 +60,18 @@ function NavBar({ userName = "John Doe", profilePic }: NavbarProps) {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(" ");
 
-  const handelLocalStorageClear = () => {
+  // ✅ Logout
+  const handleLogout = () => {
     localStorage.clear();
+    navigate("/");
   };
 
   return (
     <div className="w-full bg-gradient-to-r from-amber-600 to-amber-900 text-white shadow-lg">
       {/* Navbar */}
       <nav className="w-full h-[10vh] flex items-center justify-between px-6">
-        {/* Left Section: Logo + Links */}
+        {/* Left Section */}
         <div className="flex items-center gap-10">
-          {/* Logo */}
           <Link to="dashboard" className="flex items-center gap-2">
             <img
               src="/images/navbarLogo.webp"
@@ -56,7 +81,6 @@ function NavBar({ userName = "John Doe", profilePic }: NavbarProps) {
             <span className="text-xl font-bold">ALI Packages</span>
           </Link>
 
-          {/* Links */}
           <ul className="flex items-center gap-8 text-lg font-medium">
             <li>
               <Link
@@ -77,7 +101,7 @@ function NavBar({ userName = "John Doe", profilePic }: NavbarProps) {
           </ul>
         </div>
 
-        {/* Right Section: Avatar Dropdown */}
+        {/* Right Section (Profile) */}
         <div className="relative" ref={profileRef}>
           <div
             onClick={() => setOpenProfile(!openProfile)}
@@ -94,13 +118,10 @@ function NavBar({ userName = "John Doe", profilePic }: NavbarProps) {
           </div>
 
           {openProfile && (
-            <div className="absolute right-0 mt-2  bg-white text-black rounded-md shadow-lg min-w-[130px] z-50 overflow-hidden">
+            <div className="absolute right-0 mt-2 bg-white text-black rounded-md shadow-lg min-w-[130px] z-50 overflow-hidden">
               <button
-                onClick={() => {
-                  // Profile open ka code ya modal trigger karna hai to yahan likh do
-                  setOpenProfile(false);
-                }}
-                className="w-full text-left px-3 py-2  border-b font-medium flex items-center gap-2 hover:bg-gray-100"
+                onClick={() => setOpenProfile(false)}
+                className="w-full text-left px-3 py-2 border-b font-medium flex items-center gap-2 hover:bg-gray-100"
               >
                 <FaUserCircle /> {userName}
               </button>
@@ -109,7 +130,7 @@ function NavBar({ userName = "John Doe", profilePic }: NavbarProps) {
                 to="/"
                 onClick={() => {
                   setOpenProfile(false);
-                  handelLocalStorageClear();
+                  handleLogout();
                 }}
                 className="w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2 text-red-500 font-semibold"
               >

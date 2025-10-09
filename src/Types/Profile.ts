@@ -15,7 +15,7 @@ export interface UserProfile {
   gender: "male" | "female" | "other";
   sellerBusinessName: string;
   sellerNTNCNIC?: string;
-  sellerProvince?: Province;
+  province?: Province;
   sellerAddress?: string;
   profile_image?: string;
   data?: string;

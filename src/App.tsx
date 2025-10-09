@@ -9,8 +9,8 @@ import AdminDashBoardLayout from "./Components/DashBoard/Admin";
 import Products from "./Pages/Product/Products";
 import AddProduct from "./Pages/Product/AddProduct";
 import Parties from "./Pages/Parties/Parties";
-import AddParty from "./Pages/Parties/AddParty";
-import EditParty from "./Pages/Parties/EditParty";
+// import AddParty from "./Pages/Parties/AddParty";
+// import EditParty from "./Pages/Parties/EditParty";
 import Purchase_Tax_Invoice from "./Pages/Purchase Tax Invoice/Purchase_Tax_Invoice";
 import Sales_Tax_Invoice from "./Pages/SalesTaxInvoice/Sales_Tax_Invoice";
 import Credit_Note from "./Pages/Credit Note/Credit_Note";
@@ -22,9 +22,8 @@ import Single_Party from "./Pages/Reports/Single_Party";
 import All_Party from "./Pages/Reports/All_Party";
 import Product_report from "./Pages/Reports/Product_report";
 import Stock_Report from "./Pages/Reports/Stock_Report";
-
+import PartyForm from "./Pages/Parties/PartyForm";
 import AdminDashboard from "./Components/DashBoard/DashBoard";
-
 import SuperAdmin from "./Components/Super Admin/Admin Layout/SuperAdmin";
 import SuperAdminDashboard from "./Components/Super Admin/super admin Dashboard/SuperAdminDashboard";
 import Admins from "./Components/Super Admin/Admins/Admins";
@@ -44,8 +43,8 @@ function App() {
           <Route path="products" element={<Products />} />
           <Route path="add-product" element={<AddProduct />} />
           <Route path="parties" element={<Parties />} />
-          <Route path="add-party" element={<AddParty />} />
-          <Route path="edit-Party/:id" element={<EditParty />} />
+          <Route path="add-party" element={<PartyForm />} />
+          <Route path="edit-Party/:id" element={<PartyForm />} />
           <Route
             path="purchase-tax-invoice"
             element={<Purchase_Tax_Invoice />}

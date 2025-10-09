@@ -24,6 +24,7 @@ import { Avatar } from "antd";
 import ChangePasswordModal from "../../Models/ChangePassword";
 import FbrTokenModal from "../../Models/FBR_Token";
 import { useGetMyProfileQuery } from "../../api/Profile";
+import { motion, AnimatePresence } from "framer-motion";
 
 function Navbar() {
   const [openMenu1, setOpenMenu1] = useState(false);
@@ -43,20 +44,16 @@ function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // ✅ Capitalize first letter helper
   const capitalize = (str?: string) =>
     str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "";
 
-  // ✅ Fetch user profile
   useEffect(() => {
     if (userData?.data) {
       const { first_name, last_name, profile_image } = userData.data;
-
       const fullName = `${capitalize(first_name)} ${capitalize(
         last_name
       )}`.trim();
       setUserName(fullName || "User");
-
       const imageUrl = profile_image
         ? profile_image.startsWith("http")
           ? profile_image
@@ -66,7 +63,7 @@ function Navbar() {
     }
   }, [userData]);
 
-  // ✅ Close dropdowns when clicking outside
+  // ✅ Close dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
@@ -81,26 +78,37 @@ function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ✅ Current page name
-  const currentPageRaw =
-    location.pathname.split("/").filter(Boolean).pop() || "Dashboard";
-  const currentPage = currentPageRaw
-    .replace(/[-_]/g, " ")
-    .split(" ")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join(" ");
+  const pathSegments = location.pathname.split("/").filter(Boolean);
+  let currentPage = "Dashboard";
 
-  // ✅ Logout handler
+  if (pathSegments.length > 0) {
+    let lastSegment = pathSegments[pathSegments.length - 1];
+
+    // If the last segment is a number, use the one before it
+    if (/^\d+$/.test(lastSegment)) {
+      lastSegment = pathSegments[pathSegments.length - 2] || "Dashboard";
+    }
+
+    currentPage = lastSegment
+      .replace(/[-_]/g, " ")
+      .split(" ")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(" ");
+  }
+
+  console.log("currentPage", currentPage);
+
   const handleLogout = () => {
     localStorage.clear();
     navigate("/");
   };
 
   return (
-    <div className="w-full bg-gradient-to-r from-amber-600 to-amber-900 text-white shadow-lg">
+    <div className="w-full bg-gradient-to-r from-amber-600 to-amber-900 text-white shadow-lg relative z-50">
       {/* Top Navbar */}
-      <nav className="w-full h-[10vh] flex flex-wrap items-center justify-between px-6">
-        <div className="flex items-center gap-4">
+      <nav className="w-full h-[10vh] flex items-center justify-between px-6">
+        {/* Logo */}
+        <div className="flex items-center gap-3">
           <Link to="dashboard" className="flex items-center gap-2">
             <img
               src="/public/images/navbarLogo.webp"
@@ -111,12 +119,11 @@ function Navbar() {
           </Link>
         </div>
 
-        {/* Desktop Menu */}
         <ul className="hidden lg:flex items-center gap-8 text-lg font-medium">
           <li>
             <Link
               to="dashboard"
-              className="flex items-center gap-2 ml-4 hover:underline"
+              className="flex items-center ml-4 gap-2 hover:underline"
             >
               <MdDashboard /> Dashboard
             </Link>
@@ -139,24 +146,22 @@ function Navbar() {
           </li>
         </ul>
 
-        {/* Right Section */}
-        <div className="flex items-center gap-4 ml-auto flex-shrink-0">
+        <div className="flex items-center gap-4 ml-auto">
           <button
-            className="lg:hidden text-2xl"
+            className="lg:hidden text-3xl"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? <FaTimes /> : <FaBars />}
           </button>
 
           <div className="hidden lg:flex items-center gap-3">
-            {/* Tax Reports */}
             <div className="relative" ref={menu1Ref}>
               <button
                 onClick={() => setOpenMenu1(!openMenu1)}
-                className="flex items-center mr-4 w-[180px] gap-2 px-4 py-2 rounded-md bg-gradient-to-r from-amber-600 to-amber-900 hover:bg-white/30 transition"
+                className="flex items-center mr-4 w-[180px] gap-2 px-4 py-2 rounded-md bg-amber-700 hover:bg-amber-800 transition"
               >
                 <BsFillFileEarmarkBarGraphFill /> Tax Reports{" "}
-                <span className="ml-4">▾</span>
+                <span className="ml-auto">▾</span>
               </button>
               {openMenu1 && (
                 <ul className="absolute right-0 mt-2 mr-4 bg-white text-black shadow-lg rounded-md min-w-[180px] z-50">
@@ -191,13 +196,12 @@ function Navbar() {
               )}
             </div>
 
-            {/* Reports */}
             <div className="relative" ref={menu2Ref}>
               <button
                 onClick={() => setOpenMenu2(!openMenu2)}
-                className="flex items-center gap-2 w-[180px] px-4 py-2 rounded-md bg-gradient-to-r from-amber-600 to-amber-900 hover:bg-white/30 transition"
+                className="flex items-center gap-2 w-[180px] px-4 py-2 rounded-md bg-amber-700 hover:bg-amber-800 transition"
               >
-                <HiDocumentReport /> Reports <span className="ml-12">▾</span>
+                <HiDocumentReport /> Reports <span className="ml-auto">▾</span>
               </button>
               {openMenu2 && (
                 <ul className="absolute right-0 mt-2 bg-white text-black shadow-lg rounded-md min-w-[180px] z-50">
@@ -241,7 +245,6 @@ function Navbar() {
               )}
             </div>
 
-            {/* Profile */}
             <div className="relative flex-shrink-0" ref={profileRef}>
               <div
                 onClick={() => setOpenProfile(!openProfile)}
@@ -298,13 +301,117 @@ function Navbar() {
         </div>
       </nav>
 
-      {/* Current Page */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="lg:hidden bg-amber-700 text-white px-6 py-4 space-y-4"
+          >
+            <Link
+              to="dashboard"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block flex items-center gap-2"
+            >
+              <MdDashboard /> Dashboard
+            </Link>
+            <Link
+              to="products"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block flex items-center gap-2"
+            >
+              <FaBoxOpen /> Products
+            </Link>
+            <Link
+              to="parties"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block flex items-center gap-2"
+            >
+              <FaUsers /> Parties
+            </Link>
+            <hr className="border-white/30" />
+            <p className="font-semibold">Tax Reports</p>
+            <Link
+              to="purchase-tax-list"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block pl-4"
+            >
+              • Purchase Tax List
+            </Link>
+            <Link
+              to="sales-tax-list"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block pl-4"
+            >
+              • Sales Tax List
+            </Link>
+            <Link
+              to="credit-note-list"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block pl-4"
+            >
+              • Credit Note List
+            </Link>
+            <hr className="border-white/30" />
+            <p className="font-semibold">Reports</p>
+            <Link
+              to="single-party"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block pl-4"
+            >
+              • Single Party
+            </Link>
+            <Link
+              to="all-party"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block pl-4"
+            >
+              • All Party
+            </Link>
+            <Link
+              to="product-report"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block pl-4"
+            >
+              • Product Report
+            </Link>
+            <Link
+              to="stock-report"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block pl-4"
+            >
+              • Stock Report
+            </Link>
+            <hr className="border-white/30" />
+            <button
+              onClick={() => setShowChangePassword(true)}
+              className="block flex items-center gap-2 w-full text-left"
+            >
+              <FaLock /> Change Password
+            </button>
+            <button
+              onClick={() => setShowTokenModal(true)}
+              className="block flex items-center gap-2 w-full text-left"
+            >
+              <FaKey /> FBR Token
+            </button>
+            <button
+              onClick={handleLogout}
+              className="block flex items-center gap-2 w-full text-left text-red-300"
+            >
+              <FaSignOutAlt /> Logout
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <hr className="border-t border-white opacity-40" />
-      <div className="h-[8vh] text-2xl px-6 py-2 text-left text-white font-medium">
+      <div className="h-[8vh] text-2xl ml-12 px-6 py-2 text-left text-white font-medium">
         <span className="font-bold">{currentPage}</span>
       </div>
 
-      {/* Modals */}
       {showChangePassword && (
         <ChangePasswordModal
           visible={showChangePassword}

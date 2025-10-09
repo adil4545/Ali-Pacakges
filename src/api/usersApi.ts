@@ -6,14 +6,14 @@ import type { Province } from "../Types/Profile";
 export const usersApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getUsers: builder.query<UserProfile[], void>({
-      query: () => "/users",
+      query: () => "/auth/users",
     }),
     getProvince: builder.query<Province[], void>({
-      query: () => "/provinces",
+      query: () => "/auth/provinces",
     }),
     addUser: builder.mutation<UserProfile, Partial<UserProfile>>({
       query: (newUser) => ({
-        url: "/users",
+        url: "/auth/users",
         method: "POST",
         body: newUser,
       }),

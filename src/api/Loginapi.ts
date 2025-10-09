@@ -39,7 +39,7 @@ export const loginApi = api.injectEndpoints({
   endpoints: (builder) => ({
     login: builder.mutation<LoginResponse, LoginRequest>({
       query: (body) => ({
-        url: "/login",
+        url: "/auth/login",
         method: "POST",
         body,
       }),
@@ -49,7 +49,7 @@ export const loginApi = api.injectEndpoints({
       ForgetPasswordRequest
     >({
       query: (body) => ({
-        url: "/forget-password",
+        url: "/auth/forget-password",
         method: "POST",
         body,
       }),
@@ -59,7 +59,7 @@ export const loginApi = api.injectEndpoints({
       ResetPasswordRequest
     >({
       query: (body) => ({
-        url: "/reset-password",
+        url: "/auth/reset-password",
         method: "POST",
         body,
       }),
